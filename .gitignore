@@ -1,7 +1,7 @@
-/assets/
-/UI/
+/algomind/assets/
+/algomind/UI/
 /.python-version
 /buildozer.spec
-/database.py
+/algomind/data/database.py
 /main.py
 /bin/
