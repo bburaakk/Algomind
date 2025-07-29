@@ -1,0 +1,118 @@
+#:kivy 2.1.0
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+
+# --- Ortak Stiller ---
+
+<FormLabel@Label>:
+    font_name: 'algomind/assets/GochiHand-Regular.ttf'
+    font_size: '18sp'
+    color: (1, 1, 1, 0.9)
+    halign: 'right'
+    valign: 'middle'
+    text_size: self.size
+    padding_x: dp(10)
+
+# --- YENİ VE DÜZELTİLMİŞ INPUT STİLİ ---
+<FormInput@TextInput>:
+    font_name: 'algomind/assets/GochiHand-Regular.ttf'
+    font_size: '18sp'
+
+    # Arka planı tamamen şeffaf yapıyoruz ki kendi çizimimiz görünsün
+    background_normal: ''
+    background_active: ''
+    background_color: (0, 0, 0, 0)
+
+    # YAZI RENGİ: Yazı rengini her zaman görünür olması için BEYAZA ayarlıyoruz.
+    # Sorunun ana çözümlerinden biri bu.
+    foreground_color: (1, 1, 1, 1)
+
+    # İMLEÇ (CURSOR) RENGİ: İmleç rengini de BEYAZA ayarlayalım ki görünsün.
+    cursor_color: (1, 1, 1, 1)
+
+    hint_text_color: (0.8, 0.8, 0.8, 0.7)
+    multiline: False
+
+    canvas.before:
+        Color:
+            # ÇERÇEVE RENGİ: Tıklandığında (focus) çerçeveyi BEYAZ yapıyoruz.
+            # Tıklanmadığında ise soluk gri kalacak.
+            # Bu, çerçevenin kaybolma sorununu çözer.
+            rgba: (1, 1, 1, 1) if self.focus else (0.7, 0.7, 0.7, 0.8)
+        Line:
+            width: 1.5
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(12))
+
+<StyledButton@Button>:
+    font_name: 'algomind/assets/GochiHand-Regular.ttf'
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    color: (1, 1, 1, 1)
+    font_size: '20sp'
+    size_hint_y: None
+    height: dp(60)
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex('#357ABD') if self.state == 'normal' else get_color_from_hex('#407dbf')
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(25)]
+
+# --- Ana Ekran Tanımı ---
+
+<OgrenciEkleEkrani@Screen>:
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex('#4990e2')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: (dp(25), dp(40))
+        spacing: dp(15)
+
+        GridLayout:
+            cols: 2
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: dp(10)
+            row_default_height: dp(50)
+
+            FormLabel:
+                text: 'Adı/Soyadı'
+            FormInput:
+                id: adi_soyadi_input
+
+            FormLabel:
+                text: 'Yas'
+            FormInput:
+                id: yas_input
+
+            FormLabel:
+                text: 'Cinsiyet'
+            FormInput:
+                id: cinsiyet_input
+
+            FormLabel:
+                text: 'Hassasiyetleri'
+            FormInput:
+                id: hassasiyet_input
+
+            FormLabel:
+                text: 'Sevdigi seyler'
+            FormInput:
+                id: sevdigi_seyler_input
+
+        Widget:
+            size_hint_y: 1
+
+        StyledButton:
+            text: 'Ögrenciyi Ekle'
+            on_press: root.add_student(adi_soyadi_input.text, yas_input.text, cinsiyet_input.text, hassasiyet_input.text, sevdigi_seyler_input.text)
+
+        StyledButton:
+            text: 'Test Sayfasına Geçis'
+            on_press: root.manager.current = 'test_screen'

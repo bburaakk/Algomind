@@ -1,0 +1,107 @@
+# loginscreen.kv (Güncellenmiş Hali)
+
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+
+#--- Bu ekranın özel stilleri ---
+<RoundedInput@TextInput>:
+    size_hint_y: None
+    multiline: False
+    background_normal: ''
+    background_active: ''
+    background_color: (0, 0, 0, 0)
+    hint_text_color: (0.8, 0.8, 0.8, 0.7)
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 1) if self.focus else (0.7, 0.7, 0.7, 1)
+        Line:
+            width: 1.5
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(12))
+
+#--- Giriş Ekranı Tanımı ---
+<LoginScreen>:
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex('#4990e2')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: [dp(30), dp(40)]
+        spacing: dp(25)
+
+        RelativeLayout:
+            size_hint_y: None
+            height: dp(180)
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 1
+                Line:
+                    width: 2
+                    points: [self.center_x, self.top - dp(10), self.right - dp(10), self.center_y, self.center_x, self.y + dp(10), self.x + dp(10), self.center_y]
+                    close: True
+            Label:
+                text: u'\uf007'
+                font_name: 'algomind/assets/fontawesome-webfont.ttf'
+                font_size: '80sp'
+                color: get_color_from_hex('#357ABD')
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        Label:
+            font_name: 'algomind/assets/GochiHand-Regular.ttf'
+            text: 'Veli | Hoca'
+            font_size: '24sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: self.texture_size[1]
+
+        RoundedInput:
+            font_name: 'algomind/assets/GochiHand-Regular.ttf'
+            id: login
+            hint_text: 'Kullanıcı Adı'
+            height: dp(55)
+
+        RoundedInput:
+            font_name: 'algomind/assets/GochiHand-Regular.ttf'
+            id: password
+            hint_text: 'Sifre'
+            password: True
+            height: dp(55)
+
+        Widget:
+            size_hint_y: 0.1
+
+        # DEĞİŞİKLİK: Buton "Giris Yap" olarak güncellendi ve stil eklendi
+        Button:
+            font_name: 'algomind/assets/GochiHand-Regular.ttf'
+            text: 'Giris Yap'
+            font_size: '20sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: dp(55)
+            background_color: (0,0,0,0) # Şeffaf arka plan
+            background_normal: ''
+            background_down: ''
+            on_release: root.do_login(login.text, password.text)
+            canvas.before:
+                Color:
+                    rgba: get_color_from_hex('#357ABD') if self.state == 'normal' else get_color_from_hex('#407dbf')
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(12)]
+
+        # YENİ: Kayıt ol ekranına yönlendirme butonu
+        Button:
+            font_name: 'algomind/assets/GochiHand-Regular.ttf'
+            text: 'Hesabın yok mu? Kayıt ol'
+            font_size: '18sp'
+            color: 1, 1, 1, 0.8 # Biraz daha soluk
+            size_hint_y: None
+            height: self.texture_size[1]
+            background_color: (0, 0, 0, 0)
+            background_normal: ''
+            background_down: ''
+            # EKRAN GEÇİŞİ: Kayıt ekranına yönlendirir
+            on_release: app.root.current = 'signup_screen'
