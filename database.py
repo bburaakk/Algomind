@@ -3,7 +3,7 @@
 import requests
 from kivy.app import App
 
-API_URL = "http://127.0.0.1:8000"  # GCloud'da değişecek
+API_URL = "???"  # GCloud'da değişecek
 
 def verify_user(email, password):
     try:
