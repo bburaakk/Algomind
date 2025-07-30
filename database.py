@@ -1,16 +1,30 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import os
+# algomind/data/database.py
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_NAME = os.getenv("DB_NAME")
+import requests
+from kivy.app import App
 
-DATABASE_URL = f"postgresql://{postgres}:{BtkTestApp!123}@{34.22.172.29}/{otizm-db}"
+API_URL = "http://127.0.0.1:8000"  # GCloud'da değişecek
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def verify_user(email, password):
+    try:
+        response = requests.post(f"{API_URL}/login", json={"email": email, "password": password})
+        if response.status_code == 200:
+            token = response.json().get("access_token")
+            App.get_running_app().token = token
+            App.get_running_app().logged_in_user = email
+            return True
+        else:
+            return False
+    except Exception as e:
+        print("Hata:", e)
+        return False
 
-Base = declarative_base()
+def create_user(email, password):
+    try:
+        response = requests.post(f"{API_URL}/signup", json={"email": email, "password": password})
+        if response.status_code == 201:
+            return True, "Kayıt başarılı"
+        else:
+            return False, response.json().get("detail", "Kayıt başarısız")
+    except Exception as e:
+        return False, str(e)
