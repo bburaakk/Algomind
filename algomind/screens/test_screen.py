@@ -6,6 +6,7 @@ from kivy.clock import Clock
 class TestScreen(Screen):
     time_elapsed = NumericProperty(0)
     formatted_time = StringProperty("00:00")
+    student_name = StringProperty('Öğrenci')
 
     def on_enter(self, *args):
         Clock.schedule_interval(self.update_timer, 1)

@@ -1,102 +1,165 @@
-# raporekrani.kv (testscreen.kv stiline güncellendi)
+#:kivy 2.1.0
 
-#:import get_color_from_hex kivy.utils.get_color_from_hex
-
-#--- testscreen.kv'den gelen ve artık tüm ekranlarda kullanılabilecek
-#    tutarlı buton stilimiz ---
-<WobblyButton@Button>:
-    font_name: 'algomind/assets/GochiHand-Regular.ttf'
-    font_size: '22sp'
-    color: (1, 1, 1, 1)
-    background_normal: ''
-    background_down: ''
-    # Butonun durumuna (basılı/normal) göre arkaplan rengini değiştiriyoruz
-    background_color: get_color_from_hex('#4990e2') if self.state == 'normal' else get_color_from_hex('#407dbf')
-
-    canvas.after:
-        Color:
-            rgba: (1, 1, 1, 1)
-        Line:
-            # Butonun etrafına yuvarlak köşeli beyaz bir çizgi ekliyoruz
-            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
-            width: 1.5
-
+# Kural adını Python sınıfı adıyla eşleştiriyoruz: RaporEkrani
 <RaporEkrani>:
-    report_text_content: report_text_content
+    canvas.before:
+        Color:
+            # Arka plan rengini isteğiniz üzerine güncelledik.
+            rgba: (74/255, 144/255, 226/255, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
     BoxLayout:
         orientation: 'vertical'
-        padding: dp(20)
-        spacing: dp(15)
-        canvas.before:
-            Color:
-                # Arka plan rengini test ekranıyla aynı yapıyoruz
-                rgba: get_color_from_hex('#4990e2')
-            Rectangle:
-                pos: self.pos
-                size: self.size
+        padding: '20dp'
+        spacing: '20dp'
 
-        #--- Üst Bar (Geri ve Profil Butonları) ---
+        # Grafikler Bölümü
         BoxLayout:
-            size_hint_y: None
-            height: dp(50)
-            spacing: dp(10)
+            orientation: 'horizontal'
+            spacing: '20dp'
+            size_hint_y: 0.45
 
-            WobblyButton:
-                text: '<-'
-                size_hint_x: None
-                width: dp(60)
-                font_size: '24sp' # İkon gibi olduğu için biraz büyük kalabilir
-                on_press: root.go_back_to_selection()
+            # Sol Grafik Kartı
+            BoxLayout:
+                orientation: 'vertical'
+                padding: '10dp'
+                canvas.before:
+                    Color:
+                        rgba: (1, 1, 1, 1)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15,]
+                Label:
+                    text: 'Zamana Göre Gelişim'
+                    font_size: '18sp'
+                    color: (0.2, 0.2, 0.2, 1)
+                    size_hint_y: None
+                    height: '30dp'
+                    halign: 'left'
+                    text_size: self.width, None
+                Image:
+                    source: 'algomind/assets/grafik.png'
+                    allow_stretch: True
+                    keep_ratio: False
 
-            BoxLayout: # Butonlar arasında boşluk oluşturur
+            # Sağ Grafik Kartı
+            BoxLayout:
+                orientation: 'vertical'
+                padding: '10dp'
+                canvas.before:
+                    Color:
+                        rgba: (1, 1, 1, 1)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15,]
+                Label:
+                    text: 'Konu Performansı'
+                    font_size: '18sp'
+                    color: (0.2, 0.2, 0.2, 1)
+                    size_hint_y: None
+                    height: '30dp'
+                    halign: 'left'
+                    text_size: self.width, None
+                Image:
+                    source: 'algomind/assets/grafik.png'
+                    allow_stretch: True
+                    keep_ratio: False
 
-            WobblyButton:
-                text: 'Profil'
-                size_hint_x: None
-                width: dp(120)
-                font_size: '18sp' # Profil yazısı daha küçük ve zarif
-                on_press: root.on_profile_button_press()
-
-        #--- Ekran Başlığı ---
-        Label:
-            text: 'Rapor'
-            font_name: 'algomind/assets/GochiHand-Regular.ttf'
-            font_size: '30sp' # Başlık olduğu için daha büyük
-            color: (1, 1, 1, 1)
-            size_hint_y: None
-            height: self.texture_size[1] + dp(10) # İçeriğe göre yükseklik
-
-        #--- Rapor İçerik Alanı ---
-        BoxLayout:
-            padding: dp(15)
+        # Detaylı Analiz Bölümü
+        ScrollView:
+            size_hint_y: 0.45
             canvas.before:
                 Color:
-                    # İçerik alanı arka planı beyaz
                     rgba: (1, 1, 1, 1)
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
-                    radius: [dp(15)]
-            # Stil bütünlüğü için içerik alanına da bir çerçeve ekleyelim
-            canvas.after:
-                Color:
-                    # Çerçeve rengi, ana arka planla aynı
-                    rgba: get_color_from_hex('#4990e2')
-                Line:
-                    rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
-                    width: 1.5
-
-            # Uzun rapor metinlerinin ekrana sığması için ScrollView ekledik
-            ScrollView:
-                bar_width: dp(10)
-                bar_color: get_color_from_hex('#4990e2')
+                    radius: [15,]
+            GridLayout:
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                padding: '15dp'
+                spacing: '10dp'
                 Label:
+                    text: 'Detaylı Analiz'
+                    font_size: '20sp'
+                    bold: True
+                    color: (0.1, 0.1, 0.1, 1)
+                    size_hint_y: None
+                    height: '40dp'
+                Label:
+                    # ÖNEMLİ: Python'daki ObjectProperty'ye bağlanmak için id ekledik.
                     id: report_text_content
-                    text: "" # Bu kısım Python tarafından doldurulacak
-                    color: (0, 0, 0, 1) # Okunabilirlik için siyah metin
-                    font_size: '16sp'
-                    halign: 'left'
-                    valign: 'top'
+                    text: "Rapor içeriği yükleniyor..." # Bu metin Python tarafından güncellenecek
+                    font_size: '15sp'
+                    color: (0.4, 0.4, 0.4, 1)
                     size_hint_y: None
                     height: self.texture_size[1]
+                    markup: True
                     text_size: self.width, None
+                    line_height: 1.5
+
+        # Alt Navigasyon Butonları
+        BoxLayout:
+            size_hint_y: None
+            height: '50dp'
+            orientation: 'horizontal'
+            spacing: '10dp'
+
+            Button:
+                text: "Geri"
+                font_name: 'algomind/assets/GochiHand-Regular.ttf'
+                font_size: '16sp'
+                size_hint: None, None
+                size: dp(90), dp(45)
+                background_normal: ''
+                background_color: (0, 0, 0, 0)
+                on_press: root.go_back_to_selection()
+
+                #--- DEĞİŞİKLİK: Stil TestButton ile aynı yapıldı ---
+                canvas.before:
+                    Color:
+                        # Yarı saydam beyaz arka plan
+                        rgba: 1, 1, 1, 0.1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(15)]
+                    # Kenarlık rengi mavi tona çevrildi
+                    Color:
+                        rgba: (52/255, 152/255, 219/255, 1)
+                    Line:
+                        width: 1.5
+                        rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+
+            Widget: # Butonları ayırmak için boşluk
+
+            Button:
+                text: "Profil"
+                font_name: 'algomind/assets/GochiHand-Regular.ttf'
+                font_size: '16sp'
+                size_hint: None, None
+                size: dp(90), dp(45)
+                background_normal: ''
+                background_color: (0, 0, 0, 0)
+
+                #--- DEĞİŞİKLİK: Stil TestButton ile aynı yapıldı ---
+                canvas.before:
+                    Color:
+                        # Yarı saydam beyaz arka plan
+                        rgba: 1, 1, 1, 0.1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(15)]
+                    # Kenarlık rengi mavi tona çevrildi
+                    Color:
+                        rgba: (52/255, 152/255, 219/255, 1)
+                    Line:
+                        width: 1.5
+                        rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
