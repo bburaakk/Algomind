@@ -1,0 +1,77 @@
+# /home/burak/Belgeler/PythonProjects/Algomind/algomind/UI/screens/profile.kv
+
+#:kivy 2.1.0
+
+<ProfileEkrani>:
+    canvas.before:
+        Color:
+            # Arkaplan rengi
+            rgba: (75/255, 137/255, 204/255, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(30)
+        spacing: dp(15)
+
+        # Üstte boşluk bırakarak ortalamak için
+        Widget:
+            size_hint_y: 0.6
+
+        # Profil Resmi
+        Image:
+            # ÖNEMLİ: Bu yolu kendi profil resmi dosyanızla değiştirin.
+            source: 'algomind/assets/profile.png'
+            size_hint: None, None
+            size: dp(150), dp(150)
+            pos_hint: {'center_x': 0.5}
+            # Resmi dairesel yapmak için canvas talimatları
+            canvas.before:
+                StencilPush
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    # Yarıçapı genişliğin yarısı yaparak daire oluştururuz
+                    radius: [self.width / 2]
+                StencilUse
+            canvas.after:
+                StencilUnUse
+                StencilPop
+
+
+        # Kullanıcı Adı
+        Label:
+            text: root.username
+            font_size: '32sp'
+            color: (1, 1, 1, 1)
+            size_hint_y: None
+            height: self.texture_size[1]
+            bold: True
+
+        # Ortada boşluk bırakmak için
+        Widget:
+            size_hint_y: 1.0
+
+        # Çıkış Yap Butonu
+        Button:
+            text: 'Çıkış Yap'
+            font_size: '22sp'
+            size_hint: (0.7, None)
+            height: dp(60)
+            pos_hint: {'center_x': 0.5}
+            color: (1, 1, 1, 1)
+            background_color: (0, 0, 0, 0)
+            on_release: root.cikis_yap()
+
+            canvas.before:
+                Color:
+                    rgba: (1, 1, 1, 1)
+                Line:
+                    width: 1.5
+                    rounded_rectangle: (self.x, self.y, self.width, self.height, dp(30))
+
+        # Altta küçük bir boşluk
+        Widget:
+            size_hint_y: 0.1

@@ -37,7 +37,7 @@
             # ÇERÇEVE RENGİ: Tıklandığında (focus) çerçeveyi BEYAZ yapıyoruz.
             # Tıklanmadığında ise soluk gri kalacak.
             # Bu, çerçevenin kaybolma sorununu çözer.
-            rgba: (1, 1, 1, 1) if self.focus else (0.7, 0.7, 0.7, 0.8)
+            rgba: (0, 0, 0, 1) if self.focus else (0.9, 0.9, 0.9, 1)
         Line:
             width: 1.5
             rounded_rectangle: (self.x, self.y, self.width, self.height, dp(12))
@@ -50,18 +50,26 @@
     color: (1, 1, 1, 1)
     font_size: '20sp'
     size_hint_y: None
-    height: dp(60)
+    height: dp(55)
     canvas.before:
         Color:
             rgba: get_color_from_hex('#357ABD') if self.state == 'normal' else get_color_from_hex('#407dbf')
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [dp(25)]
+            radius: [dp(12)]
 
 # --- Ana Ekran Tanımı ---
 
-<OgrenciEkleEkrani@Screen>:
+
+<OgrenciEkleEkrani>:
+    # Python sınıfındaki ObjectProperty'leri buradaki id'lere bağlıyoruz.
+    adi_soyadi_input: adi_soyadi_input
+    yas_input: yas_input
+    cinsiyet_input: cinsiyet_input
+    hassasiyet_input: hassasiyet_input
+    sevdigi_seyler_input: sevdigi_seyler_input
+
     canvas.before:
         Color:
             rgba: get_color_from_hex('#4990e2')
@@ -79,7 +87,7 @@
             size_hint_y: None
             height: self.minimum_height
             spacing: dp(10)
-            row_default_height: dp(50)
+            row_default_height: dp(55)
 
             FormLabel:
                 text: 'Adı/Soyadı'
@@ -111,8 +119,8 @@
 
         StyledButton:
             text: 'Ögrenciyi Ekle'
-            on_press: root.add_student(adi_soyadi_input.text, yas_input.text, cinsiyet_input.text, hassasiyet_input.text, sevdigi_seyler_input.text)
+            on_release: root.add_student(adi_soyadi_input.text, yas_input.text, cinsiyet_input.text, hassasiyet_input.text, sevdigi_seyler_input.text)
 
         StyledButton:
             text: 'Test Sayfasına Geçis'
-            on_press: root.manager.current = 'test_screen'
+            on_release: root.manager.current = 'test_secim'

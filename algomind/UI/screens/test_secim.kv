@@ -1,0 +1,162 @@
+#:kivy 2.1.0
+#:import Window kivy.core.window.Window
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+
+<ProfilButton@Button>:
+    text: "Profil"
+    font_name: 'algomind/assets/GochiHand-Regular.ttf'
+    font_size: '16sp'
+    size_hint: None, None
+    size: dp(90), dp(45)
+    background_normal: ''
+    background_color: (0, 0, 0, 0)
+
+    # --- DEĞİŞİKLİK: Stil TestButton ile aynı yapıldı ---
+    canvas.before:
+        Color:
+            # Yarı saydam beyaz arka plan
+            rgba: 1, 1, 1, 0.1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(15)]
+        # Kenarlık rengi mavi tona çevrildi
+        Color:
+            rgba: (52/255, 152/255, 219/255, 1)
+        Line:
+            width: 1.5
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+
+# --- REVISED TestButton ---
+# Sadece metnin etrafına kutu çizebilmek için yeni bir özellik eklendi.
+<TestButton@ButtonBehavior+BoxLayout>:
+    orientation: 'vertical' # İkon ve etiketi dikey olarak sırala
+    padding: [dp(8), dp(8), dp(8), dp(8)] # İç boşluk ekle
+    spacing: dp(5) # İkon ve etiket arasına boşluk ekle
+    text: 'Selam'
+    icon_source: ''
+    text_boxed: False # Metin etrafında kutu olup olmayacağını belirleyen özellik
+
+    # Butonun tamamı için arka plan ve kenarlık
+    canvas.before:
+        Color:
+            # Yarı saydam beyaz arka plan
+            rgba: 1, 1, 1, 0.1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(15)]
+        # Kenarlık rengi mavi tona çevrildi
+        Color:
+            rgba: (52/255, 152/255, 219/255, 1)
+        Line:
+            width: 1.5
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+
+    # BoxLayout'un çocuğu olarak ikon
+    Image:
+        source: root.icon_source
+        size_hint_y: 0.2 # Resme daha fazla alan ver (Düzeltildi)
+        pos_hint: {'x': -0.3, 'top': 0.92}
+        allow_stretch: True
+
+
+    # Etiketi çevreleyen ve koşullu olarak kutu çizen sarmalayıcı
+    BoxLayout:
+        size_hint_y: 0.35 # Etiket için ayrılan dikey alan
+        canvas.before:
+            # Dolgu rengi (Maviye yakın ton)
+            Color:
+                # Sadece text_boxed True ise yarı saydam mavi rengi kullan
+                rgba: (41/255, 128/255, 185/255, 0.5) if root.text_boxed else (0, 0, 0, 0)
+            # Doldurma için yuvarlak köşeli dikdörtgen
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(10)]
+
+            # Kenarlık rengi (Maviye yakın ton)
+            Color:
+                # Sadece text_boxed True ise mavi çerçeveyi çiz
+                rgba: (52/255, 152/255, 219/255, 1) if root.text_boxed else (0, 0, 0, 0)
+            # Kenarlık çizgisi
+            Line:
+                width: 1.5
+                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+
+        Label:
+            text: root.text
+            font_name: 'algomind/assets/GochiHand-Regular.ttf'
+            font_size: '18sp'
+            color: (1, 1, 1, 0.9)
+
+
+<TestSecimEkrani>:
+    canvas.before:
+        Color:
+            rgba: (74/255, 144/255, 226/255, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(15)
+
+        # --- REVISED HEADER ---
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(50)
+
+            Label:
+                text: "Test Seçimi"
+                font_size: '24sp'
+                font_name: 'algomind/assets/GochiHand-Regular.ttf'
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.size
+
+            ProfilButton:
+                size_hint_x: None
+                on_press: root.go_to_profile()
+
+        # Test butonları alanı
+        GridLayout:
+            cols: 2
+            spacing: dp(20)
+            padding: dp(20)
+
+            # Tüm butonlar için text_boxed özelliği True olarak ayarlandı
+            TestButton:
+                text: "Matematik"
+                icon_source: 'algomind/assets/mat.png'
+                on_release: root.go_to_test_screen()
+                text_boxed: True
+
+            TestButton:
+                text: "Fen Bilgisi"
+                icon_source: 'algomind/assets/fen.png'
+                on_release: root.go_to_test_screen()
+                text_boxed: True
+            TestButton:
+                text: "Türkçe"
+                icon_source: 'algomind/assets/türk.png'
+                on_release: root.go_to_test_screen()
+                text_boxed: True
+            TestButton:
+                text: "Sosyal"
+                icon_source: 'algomind/assets/sos.png'
+                on_release: root.go_to_test_screen()
+                text_boxed: True
+            TestButton:
+                text: "İngilizce"
+                icon_source: 'algomind/assets/ing.png'
+                on_release: root.go_to_test_screen()
+                text_boxed: True
+            TestButton:
+                text: "Genel Test"
+                icon_source: 'algomind/assets/gen.png'
+                on_release: root.go_to_test_screen()
+                text_boxed: True
