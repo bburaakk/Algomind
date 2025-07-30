@@ -3,20 +3,15 @@
 # Bu kural sadece bu dosya içindeki butonlar için geçerlidir.
 <RoundedButton@Button>:
     background_normal: ''
+    background_down: ''
     background_color: 0, 0, 0, 0
     canvas.before:
         Color:
-            rgba: (0.4, 0.6, 0.9, 1)
+            rgba: get_color_from_hex('#357ABD') if self.state == 'normal' else get_color_from_hex('#407dbf')
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [dp(10)]
-    canvas.after:
-        Color:
-            rgba: (1, 1, 1, 1)
-        Line:
-            rounded_rectangle: self.x, self.y, self.width, self.height, dp(10)
-            width: dp(1)
 
 <OgrenciSecimEkrani>:
     main_dropdown_button: main_dropdown_button
@@ -40,7 +35,7 @@
                 size_hint_x: None
                 width: dp(100)
                 font_size: '18sp'
-                on_press: root.on_profile_button_press()
+                on_release: root.on_profile_button_press()
         RoundedButton:
             id: main_dropdown_button
             text: 'Öğrenci Seçin'
