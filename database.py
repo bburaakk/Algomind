@@ -1,6 +1,6 @@
 import requests
 
-API_URL = "http://localhost:8080"  # GCP'ye deploy edince IP ya da domain yazılacak
+API_URL = "http://34.69.3.147:8080" # GCP'ye deploy edince IP ya da domain yazılacak
 
 def create_user(email, password, role="teacher"):
     try:
