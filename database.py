@@ -1,30 +1,33 @@
-# algomind/data/database.py
-
 import requests
-from kivy.app import App
 
-API_URL = "???"  # GCloud'da değişecek
+API_URL = "http://localhost:8080"  # GCP'ye deploy edince IP ya da domain yazılacak
+
+def create_user(email, password, role="teacher"):
+    try:
+        response = requests.post(f"{API_URL}/signup", json={
+            "email": email,
+            "password": password,
+            "role": role
+        })
+        if response.status_code == 200:
+            return True, "Kayıt başarılı"
+        else:
+            return False, response.json().get("detail", "Bilinmeyen hata")
+    except Exception as e:
+        return False, f"Sunucu hatası: {str(e)}"
 
 def verify_user(email, password):
     try:
-        response = requests.post(f"{API_URL}/login", json={"email": email, "password": password})
+        response = requests.post(f"{API_URL}/login", json={
+            "email": email,
+            "password": password
+        })
         if response.status_code == 200:
+            # Token dönebilir, burada sadece doğrulama kontrolü yapıyoruz
             token = response.json().get("access_token")
-            App.get_running_app().token = token
-            App.get_running_app().logged_in_user = email
-            return True
+            return True  # Giriş başarılı
         else:
             return False
     except Exception as e:
-        print("Hata:", e)
+        print(f"Giriş hatası: {str(e)}")
         return False
-
-def create_user(email, password):
-    try:
-        response = requests.post(f"{API_URL}/signup", json={"email": email, "password": password})
-        if response.status_code == 201:
-            return True, "Kayıt başarılı"
-        else:
-            return False, response.json().get("detail", "Kayıt başarısız")
-    except Exception as e:
-        return False, str(e)
