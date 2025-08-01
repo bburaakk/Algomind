@@ -1,66 +1,49 @@
 from kivy.uix.screenmanager import Screen
-from kivy.uix.popup import Popup
-from kivy.uix.label import Label
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.textinput import TextInput
-from kivy.uix.spinner import Spinner
+from kivy.properties import StringProperty
+from algomind.data import database
+from algomind.helpers import show_popup
+from kivymd.app import MDApp
 
-from algomind.data.database import auth_service
 
-class SignupScreen(Screen):
-    def __init__(self, **kwargs):
-        super(SignupScreen, self).__init__(**kwargs)
-        self.layout = BoxLayout(orientation='vertical', padding=20, spacing=10)
+class SignUpScreen(Screen):
+    selected_role = StringProperty('ogretmen')
 
-        self.email_input = TextInput(hint_text="Email", multiline=False)
-        self.password_input = TextInput(hint_text="Password", multiline=False, password=True)
-        self.role_spinner = Spinner(
-            text="Select Role",
-            values=["teacher", "parent"],
-            size_hint=(1, 0.3)
-        )
-
-        self.signup_button = Button(text="Signup", size_hint=(1, 0.3))
-        self.signup_button.bind(on_press=self.signup_user)
-
-        self.login_button = Button(text="Go to Login", size_hint=(1, 0.3))
-        self.login_button.bind(on_press=self.go_to_login)
-
-        self.layout.add_widget(self.email_input)
-        self.layout.add_widget(self.password_input)
-        self.layout.add_widget(self.role_spinner)
-        self.layout.add_widget(self.signup_button)
-        self.layout.add_widget(self.login_button)
-
-        self.add_widget(self.layout)
-
-    def signup_user(self, instance):
-        email = self.email_input.text.strip()
-        password = self.password_input.text.strip()
-        role = self.role_spinner.text.strip()
-
-        if not email or not password or role == "Select Role":
-            self.show_popup("Error", "Please fill in all fields.")
+    def do_signup(self, username, ad, soyad, password, password_confirm, email):
+        if not username or not ad or not soyad or not password or not email:
+            show_popup("Kayıt Hatası", "Tüm alanları doldurmalısınız.")
             return
 
-        success, message = auth_service.signup(email, password, role)
+        if len(password) < 4:
+            show_popup("Kayıt Hatası", "Şifre en az 4 karakter olmalı.")
+            return
+
+        if password != password_confirm:
+            show_popup("Kayıt Hatası", "Şifreler uyuşmuyor.")
+            return
+
+        if self.selected_role not in ['ogretmen', 'veli']:
+            show_popup("Kayıt Hatası", "Lütfen geçerli bir rol seçin.")
+            return
+
+        # FastAPI üzerinden kullanıcı kaydı
+        success, message = database.auth_service.register(
+            email=email,
+            password=password,
+            role=self.selected_role
+        )
 
         if success:
-            self.show_popup("Success", "Signup successful! Please login.")
-            self.manager.current = "login"
+            print(f"Kayıt başarılı: {email} ({self.selected_role})")
+            show_popup("Başarılı", "Kayıt tamamlandı. Lütfen giriş yapın.")
+            self.manager.current = 'login_screen'
         else:
-            self.show_popup("Signup Failed", message)
+            print(f"Kayıt başarısız: {message}")
+            show_popup("Kayıt Hatası", message)
 
-    def go_to_login(self, instance):
-        self.manager.current = "login"
-
-    def show_popup(self, title, message):
-        popup_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        popup_layout.add_widget(Label(text=message))
-        close_button = Button(text="Close", size_hint=(1, 0.3))
-        popup_layout.add_widget(close_button)
-
-        popup = Popup(title=title, content=popup_layout, size_hint=(0.8, 0.4))
-        close_button.bind(on_press=popup.dismiss)
-        popup.open()
+    def on_leave(self, *args):
+        self.ids.username.text = ""
+        self.ids.ad.text = ""
+        self.ids.soyad.text = ""
+        self.ids.email.text = ""
+        self.ids.password.text = ""
+        self.ids.password_confirm.text = ""
