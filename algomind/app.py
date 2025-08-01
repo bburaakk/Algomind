@@ -1,6 +1,10 @@
 from kivymd.app import MDApp
 from kivy.properties import StringProperty
 from kivy.lang import Builder
+from kivy.uix.screenmanager import ScreenManager
+from kivy.metrics import dp
+
+# Ekran sınıflarını import edelim
 from algomind.screens.login_screen import LoginScreen
 from algomind.screens.signup_screen import SignUpScreen
 from algomind.screens.test_screen import TestScreen
@@ -14,10 +18,13 @@ from algomind.data import database
 class TestApp(MDApp):
     title = "Algomind"
     logged_in_user = StringProperty('')
+    user_role = StringProperty('')  # Kullanıcının rolü için property
 
     def build(self):
         self.theme_cls.primary_palette = "Blue"
         self.theme_cls.theme_style = "Light"
+
+        # DÜZELTME: Veritabanı başlatma işlemi, KV dosyaları yüklenmeden önce yapılmalıdır.
         database.init_db_users()
 
         # Tüm ekranları yükle
@@ -30,8 +37,6 @@ class TestApp(MDApp):
         Builder.load_file('algomind/UI/screens/ogrenciEkleSec.kv')
 
         # Ana layout'u oluştur.
-        # Bu durumda, raporekrani.kv içinde tanımlanan MDNavigationLayout ve menü yapısı
-        # uygulamanın ana yapısını oluşturur.
         main_layout = Builder.load_string("""
 MDNavigationLayout:
     id: nav_layout
@@ -58,7 +63,13 @@ MDNavigationLayout:
                     text: f"Hoş Geldin, {app.logged_in_user}" if app.logged_in_user else "Hoş Geldin, Misafir"
                     font_style: "H6"
                     halign: "center"
+
+            # DÜZELTME: Artık rol bazlı menüler kaldırıldı.
+            # Öğretmen ve Veli tüm menü öğelerini görecek.
             MDList:
+                id: ana_menu_list
+                size_hint_y: None
+                height: self.minimum_height
                 OneLineIconListItem:
                     text: "Profil"
                     on_release:
@@ -70,7 +81,7 @@ MDNavigationLayout:
                 OneLineIconListItem:
                     text: "Öğrenci Yönetimi"
                     on_release:
-                        app.root.ids.screen_manager.current = 'ogrenciEkleSec'
+                        app.root.ids.screen_manager.current = 'ogrenciEkleSec_screen'
                         app.root.ids.nav_drawer.set_state("close")
                     IconLeftWidget:
                         icon: "account-multiple"
@@ -81,6 +92,20 @@ MDNavigationLayout:
                         app.root.ids.nav_drawer.set_state("close")
                     IconLeftWidget:
                         icon: "file-chart"
+                OneLineIconListItem:
+                    text: "Test Seçimi"
+                    on_release:
+                        app.root.ids.screen_manager.current = 'test_secim'
+                        app.root.ids.nav_drawer.set_state("close")
+                    IconLeftWidget:
+                        icon: "library-books"
+                OneLineIconListItem:
+                    text: "Test Ekranı"
+                    on_release:
+                        app.root.ids.screen_manager.current = 'test_screen'
+                        app.root.ids.nav_drawer.set_state("close")
+                    IconLeftWidget:
+                        icon: "pencil-box-multiple"
                 OneLineIconListItem:
                     text: "Ayarlar"
                     on_release:

@@ -6,13 +6,13 @@ from kivymd.app import MDApp
 
 
 class SignUpScreen(Screen):
-    # DÜZELTME: Kayıt olan kullanıcının rolünü varsayılan olarak tutar
+    # Kayıt olan kullanıcının rolünü varsayılan olarak tutar
     selected_role = StringProperty('ogretmen')
 
-    def do_signup(self, username, password, password_confirm):
+    def do_signup(self, username, password, password_confirm, email):
         """Kullanıcı kayıt işlemini yapar."""
-        if not username or not password:
-            show_popup("Kayıt Hatası", "Kullanıcı adı ve şifre alanları boş bırakılamaz.")
+        if not username or not password or not email:
+            show_popup("Kayıt Hatası", "Kullanıcı adı, e-posta ve şifre alanları boş bırakılamaz.")
             return
 
         if len(password) < 4:
@@ -27,11 +27,11 @@ class SignUpScreen(Screen):
             show_popup("Kayıt Hatası", "Lütfen bir rol seçin (Öğretmen veya Veli).")
             return
 
-        # DÜZELTME: Kullanıcı rolünü de create_user fonksiyonuna gönderiyoruz.
-        success, message = database.create_user(username, password, role=self.selected_role)
+        # DÜZELTME: Kullanıcı rolünü ve e-postayı da create_user fonksiyonuna gönderiyoruz.
+        success, message = database.create_user(username, email, password, role=self.selected_role)
 
         if success:
-            print(f"Yeni kullanıcı kaydı başarılı: Kullanıcı Adı='{username}'")
+            print(f"Yeni kullanıcı kaydı başarılı: Kullanıcı Adı='{username}', Email='{email}'")
             show_popup("Başarılı", "Kayıt tamamlandı!\nLütfen giriş yapın.")
             self.manager.current = 'login_screen'
         else:
@@ -41,6 +41,6 @@ class SignUpScreen(Screen):
     def on_leave(self, *args):
         """Ekrandan ayrılırken input alanlarını temizler."""
         self.ids.username.text = ""
+        self.ids.email.text = ""
         self.ids.password.text = ""
         self.ids.password_confirm.text = ""
-
