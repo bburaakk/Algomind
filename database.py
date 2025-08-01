@@ -1,33 +1,47 @@
 import requests
 
-API_URL = "http://34.69.3.147:8080" # GCP'ye deploy edince IP ya da domain yazılacak
+API_URL = "http://35.202.188.175:8080"  # FastAPI sunucun
 
-def create_user(email, password, role="teacher"):
-    try:
-        response = requests.post(f"{API_URL}/signup", json={
+class AuthService:
+    def __init__(self):
+        self.token = None
+        self.user_role = None
+
+    def signup(self, email, password, role):
+        payload = {
             "email": email,
             "password": password,
             "role": role
-        })
-        if response.status_code == 200:
-            return True, "Kayıt başarılı"
-        else:
-            return False, response.json().get("detail", "Bilinmeyen hata")
-    except Exception as e:
-        return False, f"Sunucu hatası: {str(e)}"
+        }
+        try:
+            response = requests.post(f"{API_URL}/signup", json=payload)
+            if response.status_code == 200:
+                return True, "Registration successful"
+            else:
+                return False, response.json().get("detail", "Signup failed")
+        except Exception as e:
+            return False, str(e)
 
-def verify_user(email, password):
-    try:
-        response = requests.post(f"{API_URL}/login", json={
-            "email": email,
+    def login(self, email, password):
+        payload = {
+            "username": email,
             "password": password
-        })
-        if response.status_code == 200:
-            # Token dönebilir, burada sadece doğrulama kontrolü yapıyoruz
-            token = response.json().get("access_token")
-            return True  # Giriş başarılı
-        else:
-            return False
-    except Exception as e:
-        print(f"Giriş hatası: {str(e)}")
-        return False
+        }
+        try:
+            response = requests.post(f"{API_URL}/login", data=payload)
+            if response.status_code == 200:
+                self.token = response.json().get("access_token")
+                self.user_role = response.json().get("role")
+                return True, "Login successful"
+            else:
+                return False, response.json().get("detail", "Login failed")
+        except Exception as e:
+            return False, str(e)
+
+    def get_token(self):
+        return self.token
+
+    def get_user_role(self):
+        return self.user_role
+
+auth_service = AuthService()
