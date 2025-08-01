@@ -1,8 +1,7 @@
-# testscreen.kv (Elmanın arkasındaki çerçeve kaldırıldı)
-
+#:kivy 2.1.0
+#:import Window kivy.core.window.Window
 #:import get_color_from_hex kivy.utils.get_color_from_hex
 
-#--- Özel Buton Stilimiz ---
 <WobblyButton@Button>:
     font_name: 'algomind/assets/GochiHand-Regular.ttf'
     font_size: '22sp'
@@ -20,7 +19,6 @@
             rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
             width: 1.5
 
-#--- Özel Etiket Stilimiz ---
 <WobblyLabel@Label>:
     font_name: 'algomind/assets/GochiHand-Regular.ttf'
     font_size: '22sp'
@@ -42,8 +40,8 @@
             rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
             width: 1.5
 
-#--- Test Ekranı Tanımı ---
 <TestScreen>:
+    name: 'test_screen'
     canvas.before:
         Color:
             rgba: get_color_from_hex('#4990e2')
@@ -64,6 +62,7 @@
                 text: root.student_name
             WobblyLabel:
                 text: root.formatted_time
+
         RelativeLayout:
             size_hint_y: 0.8
 
@@ -73,7 +72,6 @@
                 size_hint: (0.6, 0.6)
                 pos_hint: {'center_x': 0.5, 'center_y': 0.5}
                 allow_stretch: True
-                # DEĞİŞİKLİK: Elmanın arkasındaki çerçeveyi çizen canvas.after bloğu kaldırıldı.
 
         BoxLayout:
             orientation: 'horizontal'
@@ -91,4 +89,5 @@
             WobblyButton:
                 text: 'Testi Bitir'
                 pos_hint: {'center_x': 0.5}
-                on_release: app.root.current = 'rapor_ekrani'
+                # DÜZELTME: Ekran geçişi için app.root.ids.screen_manager.current kullanıldı.
+                on_release: app.root.ids.screen_manager.current = 'rapor_ekrani_screen'
