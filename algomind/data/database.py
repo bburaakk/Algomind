@@ -1,106 +1,219 @@
-import sqlite3
-import bcrypt
+import psycopg2
 
-# Veritabanı dosyasının adı. Bu dosya, uygulamanın çalıştığı dizinde oluşturulacak.
-DB_NAME = "algomind.db"
+DB_HOST = "localhost"
+DB_NAME = "postgres"
+DB_USER = "postgres"
+DB_PASSWORD = "Tarsua1+20+6"
 
-def get_db_connection():
-    """Veritabanına yeni bir bağlantı oluşturur ve döndürür."""
+
+def get_connection():
+    """PostgreSQL veritabanı bağlantısını döndürür."""
     try:
-        # connect() metodu dosya yoksa otomatik olarak oluşturur.
-        conn = sqlite3.connect(DB_NAME)
-        # Sonuçlara sütun adıyla erişebilmek için row_factory ayarı
-        conn.row_factory = sqlite3.Row
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
         return conn
-    except sqlite3.Error as e:
+    except Exception as e:
         print(f"Veritabanı bağlantı hatası: {e}")
         return None
 
+
 def init_db_users():
-    """
-    Veritabanını ve 'users' tablosunu (eğer mevcut değilse) oluşturur.
-    Bu fonksiyon uygulamanın başında bir kez çağrılmalıdır.
-    """
-    conn = get_db_connection()
-    if not conn:
+    """Veritabanını başlatır ve kullanıcı tablosunu oluşturur."""
+    conn = get_connection()
+    if conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                        CREATE TABLE IF NOT EXISTS users
+                        (
+                            id
+                            SERIAL
+                            PRIMARY
+                            KEY,
+                            username
+                            VARCHAR
+                        (
+                            50
+                        ) NOT NULL UNIQUE,
+                            password VARCHAR
+                        (
+                            255
+                        ) NOT NULL,
+                            role VARCHAR
+                        (
+                            50
+                        ) NOT NULL
+                            );
+                        """)
+            conn.commit()
+        conn.close()
+        print("Veritabanı ve 'users' tablosu başarıyla başlatıldı.")
+    else:
         print("Veritabanı başlatılamadı.")
-        return
 
-    try:
-        # UNIQUE kısıtlaması, aynı kullanıcı adının tekrar eklenmesini engeller.
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL UNIQUE,
-                password_hash TEXT NOT NULL
-            )
-        ''')
-        conn.commit()
-        print(f"Veritabanı '{DB_NAME}' başarıyla başlatıldı/kontrol edildi.")
-    except sqlite3.Error as e:
-        print(f"Tablo oluşturulurken hata oluştu: {e}")
-    finally:
-        if conn:
+
+def create_user(username, password, role="ogretmen"):
+    """Yeni bir kullanıcı oluşturur ve veritabanına kaydeder."""
+    conn = get_connection()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                # Kullanıcı adının zaten var olup olmadığını kontrol et
+                cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+                if cur.fetchone():
+                    return False, "Bu kullanıcı adı zaten mevcut."
+
+                # Yeni kullanıcıyı ekle
+                cur.execute(
+                    "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
+                    (username, password, role)
+                )
+                conn.commit()
             conn.close()
-
-def init_db_ogrenci_bilgileri():
-    pass
-
-def create_user(username, password):
-    """Yeni bir kullanıcı oluşturur ve şifresini hash'leyerek kaydeder."""
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-    conn = get_db_connection()
-    if not conn:
-        return False, "Veritabanı bağlantısı kurulamadı."
-
-    # PostgreSQL'deki '%s' yerine SQLite'ta placeholder olarak '?' kullanılır.
-    sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-
-    try:
-        # 'with conn:' bloğu, işlem başarılı olursa otomatik commit,
-        # hata olursa rollback yapar.
-        with conn:
-            conn.execute(sql, (username, hashed_password.decode('utf-8')))
-        return True, "Kullanıcı başarıyla oluşturuldu."
-    except sqlite3.IntegrityError:
-        # Bu hata, 'username' UNIQUE kısıtlaması nedeniyle kullanıcı adı zaten mevcutsa oluşur.
-        return False, "Bu kullanıcı adı zaten alınmış."
-    except sqlite3.Error as e:
-        return False, f"Bir hata oluştu: {e}"
-    finally:
-        if conn:
+            return True, "Kayıt başarılı."
+        except Exception as e:
             conn.close()
+            return False, f"Veritabanı hatası: {e}"
+    else:
+        return False, "Veritabanına bağlanılamadı."
 
-def verify_user(username, password):
-    """Kullanıcı adı ve şifreyi veritabanındaki hash ile karşılaştırarak doğrular."""
-    conn = get_db_connection()
-    if not conn:
-        return False
 
-    # PostgreSQL'deki '%s' yerine SQLite'ta placeholder olarak '?' kullanılır.
-    sql = "SELECT password_hash FROM users WHERE username = ?"
-
-    try:
-        cur = conn.cursor()
-        cur.execute(sql, (username,))
-        result = cur.fetchone() # Tek bir sonuç satırı alır
-
-        if result is None:
-            # Kullanıcı bulunamadı
+def verify_user(username, password, role):
+    """Kullanıcı adı, şifre ve rolü kontrol eder."""
+    conn = get_connection()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT id FROM users WHERE username = %s AND password = %s AND role = %s",
+                    (username, password, role)
+                )
+                user = cur.fetchone()
+            conn.close()
+            if user:
+                return True
+            else:
+                return False
+        except Exception as e:
+            conn.close()
+            print(f"Veritabanı doğrulama hatası: {e}")
             return False
-
-        # row_factory sayesinde sütun adıyla veriye erişiyoruz
-        stored_hash = result['password_hash'].encode('utf-8')
-
-        # Kullanıcının girdiği şifre ile veritabanındaki hash'i karşılaştır
-        if bcrypt.checkpw(password.encode('utf-8'), stored_hash):
-            return True # Şifre doğru
-        else:
-            return False # Şifre yanlış
-    except sqlite3.Error as e:
-        print(f"Kullanıcı doğrulanırken hata: {e}")
+    else:
+        print("Veritabanına bağlanılamadı.")
         return False
-    finally:
-        if conn:
+
+
+# Bu satırları sadece test amaçlı kullanın, ana uygulamanızda zaten çağrılıyor.
+if __name__ == '__main__':
+    init_db_users()
+import psycopg2
+
+DB_HOST = "localhost"
+DB_NAME = "postgres"
+DB_USER = "postgres"
+DB_PASSWORD = "Tarsua1+20+6"
+
+
+def get_connection():
+    """PostgreSQL veritabanı bağlantısını döndürür."""
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        return conn
+    except Exception as e:
+        print(f"Veritabanı bağlantı hatası: {e}")
+        return None
+
+
+def init_db_users():
+    """Veritabanını başlatır ve kullanıcı tablosunu oluşturur."""
+    conn = get_connection()
+    if conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                        CREATE TABLE IF NOT EXISTS users
+                        (
+                            id
+                            SERIAL
+                            PRIMARY
+                            KEY,
+                            username
+                            VARCHAR
+                        (
+                            50
+                        ) NOT NULL UNIQUE,
+                            password VARCHAR
+                        (
+                            255
+                        ) NOT NULL,
+                            role VARCHAR
+                        (
+                            50
+                        ) NOT NULL
+                            );
+                        """)
+            conn.commit()
+        conn.close()
+        print("Veritabanı ve 'users' tablosu başarıyla başlatıldı.")
+    else:
+        print("Veritabanı başlatılamadı.")
+
+
+def create_user(username, password, role="ogretmen"):
+    """Yeni bir kullanıcı oluşturur ve veritabanına kaydeder."""
+    conn = get_connection()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                # Kullanıcı adının zaten var olup olmadığını kontrol et
+                cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+                if cur.fetchone():
+                    return False, "Bu kullanıcı adı zaten mevcut."
+
+                # Yeni kullanıcıyı ekle
+                cur.execute(
+                    "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
+                    (username, password, role)
+                )
+                conn.commit()
             conn.close()
+            return True, "Kayıt başarılı."
+        except Exception as e:
+            conn.close()
+            return False, f"Veritabanı hatası: {e}"
+    else:
+        return False, "Veritabanına bağlanılamadı."
+
+
+def verify_user(username, password, role):
+    """Kullanıcı adı, şifre ve rolü kontrol eder."""
+    conn = get_connection()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT id FROM users WHERE username = %s AND password = %s AND role = %s",
+                    (username, password, role)
+                )
+                user = cur.fetchone()
+            conn.close()
+            if user:
+                return True
+            else:
+                return False
+        except Exception as e:
+            conn.close()
+            print(f"Veritabanı doğrulama hatası: {e}")
+            return False
+    else:
+        print("Veritabanına bağlanılamadı.")
+        return False
+
+

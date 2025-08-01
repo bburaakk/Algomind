@@ -1,16 +1,12 @@
 #:kivy 2.1.0
 #:import get_color_from_hex kivy.utils.get_color_from_hex
 #:import Factory kivy.factory.Factory
-
-# --- YENİ TASARIM İÇİN GEREKLİ STİLLER ---
+#:import MDTopAppBar kivymd.uix.toolbar.MDTopAppBar
 
 <IconLabel@Label>:
-    # DÜZELTME: İkonların doğru görünmesi için font adı düzeltildi.
-    # Bu font dosyasının 'algomind/assets/' klasöründe olduğundan emin olun.
     font_name: 'algomind/assets/materialdesignicons-webfont.ttf'
 
 <SearchBar@FloatLayout>:
-    # DÜZELTME: TextInput buradan kaldırıldı. Sadece SearchBar'ın çerçevesi ve ikonu tanımlanıyor.
     size_hint_y: None
     height: dp(48)
     canvas.before:
@@ -20,9 +16,6 @@
             pos: self.pos
             size: self.size
             radius: [dp(24)]
-
-
-# --- KALDIRILDI: Artık kullanılmayan FilterButton kuralı temizlendi. ---
 
 <CircularImage@Widget>:
     source: ''
@@ -107,6 +100,7 @@
             size_hint_x: None
             width: self.texture_size[0]
 
+
 <SecondaryBottomButton@Button>:
     background_color: (0,0,0,0)
     background_normal: ''
@@ -130,9 +124,6 @@
             color: get_color_from_hex('#52616B')
             font_size: '18sp'
 
-
-# --- ÖĞRENCİ EKLEME FORMU İÇİN STİLLER ---
-
 <FormSectionHeader@Label>:
     font_name: 'algomind/assets/GochiHand-Regular.ttf'
     font_size: '20sp'
@@ -153,7 +144,6 @@
     text_size: self.width, None
     padding: [0, dp(4), 0, 0]
 
-# YENİ: Cinsiyet gibi seçenekler için özel etiket stili
 <FormOptionLabel@Label>:
     font_name: 'algomind/assets/GochiHand-Regular.ttf'
     font_size: '16sp'
@@ -219,20 +209,27 @@
             radius: [dp(16)]
 
 # --- ANA EKRAN ---
-
 <OgrenciYonetimEkrani>:
     BoxLayout:
         orientation: 'vertical'
+
+        # MDTopAppBar eklendi
+        MDTopAppBar:
+            title: "Öğrenci Yönetimi"
+            elevation: 10
+            left_action_items: [['menu', lambda x: root.toggle_navigation_drawer()]]
+            md_bg_color: (74/255, 144/255, 226/255, 1)
+
+
         ScreenManager:
             id: content_manager
             transition: Factory.FadeTransition(duration=0.2)
 
-            # --- YENİ ÖĞRENCİ SEÇİM EKRANI ---
             Screen:
                 name: 'secim_view'
                 canvas.before:
                     Color:
-                        rgba: get_color_from_hex('#F0F4F8') # Açık mavi/off-white
+                        rgba: get_color_from_hex('#F0F4F8')
                     Rectangle:
                         pos: self.pos
                         size: self.size
@@ -247,7 +244,7 @@
                             id: search_input
                             hint_text: "Öğrencileri Ara..."
                             on_text: root.search_students(self.text)
-                            pos_hint: {'center_y': 0.5}
+                            pos_hint: {'center_y': 0.35}
                             x: self.parent.x + dp(50)
                             size_hint_x: 0.85
                             background_color: (0,0,0,0)
@@ -278,7 +275,6 @@
                         SecondaryBottomButton:
                             on_release: root.go_to_test_secim()
 
-            # --- YENİ ÖĞRENCİ EKLEME EKRANI ---
             Screen:
                 name: 'ekle_view'
                 canvas.before:
@@ -323,7 +319,6 @@
                                 hint_text: "Yaşını girin"
                                 input_filter: 'int'
 
-                        # --- DÜZENLENEN BÖLÜM ---
                         FormItemLabel:
                             text: "Cinsiyet"
                         BoxLayout:
@@ -347,7 +342,6 @@
                                 width: dp(30)
                             FormOptionLabel:
                                 text: "Erkek"
-                        # --- DÜZENLEME BİTTİ ---
 
                         FormSectionHeader:
                             text: "Özel Bilgiler"
@@ -406,3 +400,4 @@
                             CancelButton:
                                 text: "İptal"
                                 on_release: root.ids.content_manager.current = 'secim_view'
+
