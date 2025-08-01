@@ -28,35 +28,10 @@ def init_db_users():
     conn = get_connection()
     if conn:
         try:
-            # DÜZELTME: Cursor artık 'with' bloğu olmadan kullanılıyor.
             cur = conn.cursor()
-            # 'email' sütunu eklendi
-            cur.execute("""
-                        CREATE TABLE IF NOT EXISTS users
-                        (
-                            id
-                            SERIAL
-                            PRIMARY
-                            KEY,
-                            username
-                            VARCHAR
-                        (
-                            50
-                        ) NOT NULL UNIQUE,
-                            email VARCHAR
-                        (
-                            100
-                        ) NOT NULL UNIQUE,
-                            password VARCHAR
-                        (
-                            255
-                        ) NOT NULL,
-                            role VARCHAR
-                        (
-                            50
-                        ) NOT NULL
-                            );
-                        """)
+            # DÜZELTME: 'ad' ve 'soyad' sütunları eklendi.
+            cur.execute(
+                "CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE, ad VARCHAR(50), soyad VARCHAR(50), email VARCHAR(100) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, role VARCHAR(50) NOT NULL);")
             conn.commit()
             cur.close()
             conn.close()
@@ -69,24 +44,22 @@ def init_db_users():
         print("Veritabanı başlatılamadı.")
 
 
-def create_user(username, email, password, role="ogretmen"):
+def create_user(username, ad, soyad, email, password, role="ogretmen"):
     """Yeni bir kullanıcı oluşturur ve veritabanına kaydeder."""
     conn = get_connection()
     if conn:
         try:
-            # DÜZELTME: Cursor artık 'with' bloğu olmadan kullanılıyor.
             cur = conn.cursor()
-            # Kullanıcı adının veya e-postanın zaten var olup olmadığını kontrol et
             cur.execute("SELECT id FROM users WHERE username = %s OR email = %s", (username, email))
             if cur.fetchone():
                 cur.close()
                 conn.close()
                 return False, "Bu kullanıcı adı veya e-posta zaten mevcut."
 
-            # Yeni kullanıcıyı ekle
+            # DÜZELTME: 'ad' ve 'soyad' bilgileri de INSERT sorgusuna eklendi.
             cur.execute(
-                "INSERT INTO users (username, email, password, role) VALUES (%s, %s, %s, %s)",
-                (username, email, password, role)
+                "INSERT INTO users (username, ad, soyad, email, password, role) VALUES (%s, %s, %s, %s, %s, %s)",
+                (username, ad, soyad, email, password, role)
             )
             conn.commit()
             cur.close()
@@ -105,9 +78,7 @@ def verify_user(username, password, role):
     conn = get_connection()
     if conn:
         try:
-            # DÜZELTME: Cursor artık 'with' bloğu olmadan kullanılıyor.
             cur = conn.cursor()
-            # Doğrulama sadece kullanıcı adı, şifre ve rol ile yapılır.
             cur.execute(
                 "SELECT id FROM users WHERE username = %s AND password = %s AND role = %s",
                 (username, password, role)
@@ -127,5 +98,4 @@ def verify_user(username, password, role):
     else:
         print("Veritabanına bağlanılamadı.")
         return False
-
 
