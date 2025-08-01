@@ -12,6 +12,8 @@ from algomind.screens.rapor_ekrani import RaporEkrani
 from algomind.screens.profile import ProfileEkrani
 from algomind.screens.test_secim import TestSecimEkrani
 from algomind.screens.ogrenciEkleSec import OgrenciYonetimEkrani
+# YENİ: Veli ana ekranını import ediyoruz
+from algomind.screens.veli_ana_ekran import VeliAnaEkrani
 from algomind.data import database
 
 
@@ -35,6 +37,8 @@ class TestApp(MDApp):
         Builder.load_file('algomind/UI/screens/profile.kv')
         Builder.load_file('algomind/UI/screens/test_secim.kv')
         Builder.load_file('algomind/UI/screens/ogrenciEkleSec.kv')
+        # YENİ: Veli ana ekranının KV dosyasını yüklüyoruz
+        Builder.load_file('algomind/UI/screens/veli_ana_ekran.kv')
 
         # Ana layout'u oluştur.
         main_layout = Builder.load_string("""
@@ -64,12 +68,11 @@ MDNavigationLayout:
                     font_style: "H6"
                     halign: "center"
 
-            # DÜZELTME: Artık rol bazlı menüler kaldırıldı.
-            # Öğretmen ve Veli tüm menü öğelerini görecek.
+            # Öğretmen için menü öğeleri
             MDList:
-                id: ana_menu_list
+                id: ogretmen_menu_list
                 size_hint_y: None
-                height: self.minimum_height
+                height: self.minimum_height if app.get_running_app().user_role == 'ogretmen' else 0
                 OneLineIconListItem:
                     text: "Profil"
                     on_release:
@@ -106,6 +109,40 @@ MDNavigationLayout:
                         app.root.ids.nav_drawer.set_state("close")
                     IconLeftWidget:
                         icon: "pencil-box-multiple"
+
+            # Veli için menü öğeleri
+            MDList:
+                id: veli_menu_list
+                size_hint_y: None
+                height: self.minimum_height if app.get_running_app().user_role == 'veli' else 0
+                OneLineIconListItem:
+                    text: "Ana Sayfa"
+                    on_release:
+                        app.root.ids.screen_manager.current = 'veli_ana_ekran'
+                        app.root.ids.nav_drawer.set_state("close")
+                    IconLeftWidget:
+                        icon: "home"
+                OneLineIconListItem:
+                    text: "Profil"
+                    on_release:
+                        app.root.ids.screen_manager.get_screen('profile_screen').return_to_screen = app.root.ids.screen_manager.current
+                        app.root.ids.screen_manager.current = 'profile_screen'
+                        app.root.ids.nav_drawer.set_state("close")
+                    IconLeftWidget:
+                        icon: "account-circle"
+                OneLineIconListItem:
+                    text: "Test Sonuçları"
+                    on_release:
+                        app.root.ids.screen_manager.current = 'test_screen'
+                        app.root.ids.nav_drawer.set_state("close")
+                    IconLeftWidget:
+                        icon: "check-all"
+
+            # Ortak menü öğeleri
+            MDList:
+                id: ortak_menu_list
+                size_hint_y: None
+                height: self.minimum_height
                 OneLineIconListItem:
                     text: "Ayarlar"
                     on_release:
@@ -130,13 +167,9 @@ MDNavigationLayout:
         sm.add_widget(RaporEkrani(name='rapor_ekrani_screen'))
         sm.add_widget(ProfileEkrani(name='profile_screen'))
         sm.add_widget(TestSecimEkrani(name='test_secim'))
-        sm.add_widget(OgrenciYonetimEkrani(name='ogrenciEkleSec'))
+        sm.add_widget(OgrenciYonetimEkrani(name='ogrenciEkleSec_screen'))
 
         # Başlangıç ekranını ayarla
         sm.current = 'login_screen'
 
         return main_layout
-
-
-if __name__ == '__main__':
-    TestApp().run()
