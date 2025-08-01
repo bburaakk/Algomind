@@ -5,11 +5,18 @@ API_BASE_URL = "http://35.202.188.175:8080"  # VM IP adresin
 TOKEN_FILE = "auth_token.txt"
 
 class AuthService:
-    def signup(self, email, password, role):
+    def signup(self, email, password, role, username, ad, soyad):
         try:
             response = requests.post(
                 f"{API_BASE_URL}/signup",
-                json={"email": email, "password": password, "role": role}
+                json={
+                    "email": email,
+                    "password": password,
+                    "role": role,
+                    "username": username,
+                    "ad": ad,
+                    "soyad": soyad
+                }
             )
             if response.status_code == 200:
                 return True, "Signup successful"
