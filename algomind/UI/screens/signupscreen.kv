@@ -92,6 +92,36 @@
                     valign: 'middle'
 
             TextInput:
+                id: ad
+                hint_text: 'Ad'
+                size_hint_y: None
+                height: dp(50)
+                multiline: False
+                background_color: 0,0,0,0
+                padding: [dp(15), (self.height - self.font_size)/2]
+                canvas.after:
+                    Color:
+                        rgba: 0.8, 0.8, 0.8, 1
+                    Line:
+                        points: self.x, self.y, self.x + self.width, self.y
+                        width: 1.2
+
+            TextInput:
+                id: soyad
+                hint_text: 'Soyad'
+                size_hint_y: None
+                height: dp(50)
+                multiline: False
+                background_color: 0,0,0,0
+                padding: [dp(15), (self.height - self.font_size)/2]
+                canvas.after:
+                    Color:
+                        rgba: 0.8, 0.8, 0.8, 1
+                    Line:
+                        points: self.x, self.y, self.x + self.width, self.y
+                        width: 1.2
+
+            TextInput:
                 id: username
                 hint_text: 'Kullanıcı Adı'
                 size_hint_y: None
@@ -162,7 +192,7 @@
                 background_color: 0,0,0,0
                 background_normal: ''
                 font_size: '18sp'
-                on_release: root.do_signup(username.text, password.text, password_confirm.text, email.text)
+                on_release: root.do_signup(username.text, ad.text, soyad.text, password.text, password_confirm.text, email.text)
                 canvas.before:
                     Color:
                         rgba: 3/255, 115/255, 252/255, 1
