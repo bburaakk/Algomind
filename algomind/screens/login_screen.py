@@ -1,38 +1,38 @@
-# /home/burak/Belgeler/PythonProjects/Algomind/algomind/screens/login_screen.py
-
-# 1. App sınıfını import ediyoruz
-from kivy.app import App
 from kivy.uix.screenmanager import Screen
+from kivy.properties import StringProperty
 from algomind.data import database
 from algomind.helpers import show_popup
+from kivymd.app import MDApp  # MDApp'e erişim için import ettik.
+
 
 class LoginScreen(Screen):
+    # Giriş yapan kullanıcının rolünü tutacak property
+    selected_role = StringProperty('ogretmen')
+
     def do_login(self, login_text, password_text):
         if not login_text or not password_text:
             show_popup("Giriş Hatası", "Kullanıcı adı ve şifre boş bırakılamaz.")
             return
 
-        if database.verify_user(login_text, password_text):
-            print(f"Giriş başarılı: Kullanıcı Adı='{login_text}'")
+        # DÜZELTME: Veri tabanı doğrulamasında rolü de parametre olarak gönderiyoruz.
+        if database.verify_user(login_text, password_text, self.selected_role):
+            app = MDApp.get_running_app()
+            app.logged_in_user = login_text
+            app.user_role = self.selected_role
 
-            # 2. EKSİK OLAN EN ÖNEMLİ KISIM BURASI
-            # Giriş yapan kullanıcının adını ana App sınıfında saklıyoruz.
-            # Bu satır olmadan, profil ekranı kimin giriş yaptığını bilemez.
-            App.get_running_app().logged_in_user = login_text
-
-            # Kullanıcıyı öğrenci seçim ekranına yönlendiriyoruz.
-            # (Daha önce 'ogrenci_ekle_ekrani' idi, 'ogrenci_secim_ekrani' daha mantıklı bir akış olabilir)
-            self.manager.current = 'ogrenciEkleSec'
+            # DÜZELTME: Kullanıcı rolüne göre farklı ana ekranlara yönlendiriyoruz.
+            if self.selected_role == 'ogretmen':
+                self.manager.current = 'ogrenciEkleSec'
+            elif self.selected_role == 'veli':
+                # Veli için ayrı bir ana ekran oluşturulursa buraya eklenecek.
+                self.manager.current = 'test_screen'
         else:
-            print(f"Giriş başarısız: Kullanıcı Adı='{login_text}'")
-            show_popup("Giriş Hatası", "Kullanıcı adı veya şifre hatalı.")
+            show_popup("Giriş Hatası", "Kullanıcı adı, şifre veya rol hatalı.")
 
     def clear_fields(self):
-        """Giriş alanlarını temizlemek için yardımcı bir fonksiyon."""
         self.ids.login.text = ""
         self.ids.password.text = ""
 
     def on_enter(self, *args):
-        # Ekrana her girildiğinde kullanıcı adı alanına odaklanmak iyi bir kullanıcı deneyimi sağlar.
-        print("LoginScreen'e girildi.")
         self.ids.login.focus = True
+

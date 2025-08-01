@@ -1,12 +1,16 @@
 from kivy.uix.screenmanager import Screen
-
-# Gerekli modülleri yeni yerlerinden import ediyoruz
+from kivy.properties import StringProperty
 from algomind.data import database
 from algomind.helpers import show_popup
+from kivymd.app import MDApp
 
 
 class SignUpScreen(Screen):
+    # DÜZELTME: Kayıt olan kullanıcının rolünü varsayılan olarak tutar
+    selected_role = StringProperty('ogretmen')
+
     def do_signup(self, username, password, password_confirm):
+        """Kullanıcı kayıt işlemini yapar."""
         if not username or not password:
             show_popup("Kayıt Hatası", "Kullanıcı adı ve şifre alanları boş bırakılamaz.")
             return
@@ -19,7 +23,12 @@ class SignUpScreen(Screen):
             show_popup("Kayıt Hatası", "Şifreler uyuşmuyor.")
             return
 
-        success, message = database.create_user(username, password)
+        if self.selected_role not in ['ogretmen', 'veli']:
+            show_popup("Kayıt Hatası", "Lütfen bir rol seçin (Öğretmen veya Veli).")
+            return
+
+        # DÜZELTME: Kullanıcı rolünü de create_user fonksiyonuna gönderiyoruz.
+        success, message = database.create_user(username, password, role=self.selected_role)
 
         if success:
             print(f"Yeni kullanıcı kaydı başarılı: Kullanıcı Adı='{username}'")
@@ -31,7 +40,7 @@ class SignUpScreen(Screen):
 
     def on_leave(self, *args):
         """Ekrandan ayrılırken input alanlarını temizler."""
-        print("SignUpScreen'den ayrılındı, alanlar temizleniyor.")
         self.ids.username.text = ""
         self.ids.password.text = ""
         self.ids.password_confirm.text = ""
+

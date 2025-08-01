@@ -43,8 +43,8 @@
                 font_size: '18sp'
                 color: (1,1,1,1) if self.state == 'down' else (1,1,1,0.7)
                 background_color: (0,0,0,0)
-                # Python tarafında bu role göre işlem yapmak için:
-                # on_press: root.selected_role = 'hoca'
+                # DÜZELTME: selected_role property'sini günceller.
+                on_press: root.selected_role = 'ogretmen'
                 canvas.before:
                     Color:
                         # Seçili ise beyaz, değilse yarı saydam kenarlık
@@ -64,13 +64,14 @@
                 font_size: '18sp'
                 color: (1,1,1,1) if self.state == 'down' else (1,1,1,0.7)
                 background_color: (0,0,0,0)
-                # on_press: root.selected_role = 'veli'
+                # DÜZELTME: selected_role property'sini günceller.
+                on_press: root.selected_role = 'veli'
                 canvas.before:
                     Color:
                         rgba: (1,1,1,1) if self.state == 'down' else (1,1,1,0.5)
                     Line:
                         width: 1.5
-                        rounded_rectangle: self.x, self.y, self.width, self.height, dp(20)
+                        rounded_rectangle: (self.x, self.y, self.width, self.height, dp(20))
 
         #--- Beyaz Giriş Formu Kutusu (Mevcut kodunuzdan alındı) ---
         BoxLayout:
@@ -135,6 +136,7 @@
                 background_color: 0,0,0,0
                 background_normal: ''
                 font_size: '18sp'
+                # DÜZELTME: do_login metoduna selected_role'ü parametre olarak gönderiyoruz.
                 on_release: root.do_login(login.text, password.text)
                 canvas.before:
                     Color:
@@ -158,10 +160,11 @@
                 background_normal: ''
                 color: 3/255, 115/255, 252/255, 1
                 font_size: '18sp'
-                on_release: app.root.current = 'signup_screen'
+                on_release: app.root.ids.screen_manager.current = 'signup_screen'
                 canvas.before:
                     Color:
                         rgba: 3/255, 115/255, 252/255, 1
                     Line:
                         width: 1.2
                         rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+
