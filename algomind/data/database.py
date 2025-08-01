@@ -1,19 +1,21 @@
-import psycopg2
+# Düzeltme: psycopg2 yerine pg8000 kullanılıyor
+import pg8000.dbapi as pg
 
-DB_HOST = "localhost"
+# PostgreSQL bağlantı bilgileri
+DB_HOST = "192.168.1.103"
 DB_NAME = "postgres"
 DB_USER = "postgres"
 DB_PASSWORD = "Tarsua1+20+6"
 
 
 def get_connection():
-    """PostgreSQL veritabanı bağlantısını döndürür."""
+    """PostgreSQL veritabanı bağlantısını pg8000 ile döndürür."""
     try:
-        conn = psycopg2.connect(
-            host=DB_HOST,
-            database=DB_NAME,
+        conn = pg.connect(
             user=DB_USER,
-            password=DB_PASSWORD
+            password=DB_PASSWORD,
+            host=DB_HOST,
+            database=DB_NAME
         )
         return conn
     except Exception as e:
@@ -25,7 +27,10 @@ def init_db_users():
     """Veritabanını başlatır ve kullanıcı tablosunu oluşturur."""
     conn = get_connection()
     if conn:
-        with conn.cursor() as cur:
+        try:
+            # DÜZELTME: Cursor artık 'with' bloğu olmadan kullanılıyor.
+            cur = conn.cursor()
+            # 'email' sütunu eklendi
             cur.execute("""
                         CREATE TABLE IF NOT EXISTS users
                         (
@@ -38,116 +43,9 @@ def init_db_users():
                         (
                             50
                         ) NOT NULL UNIQUE,
-                            password VARCHAR
+                            email VARCHAR
                         (
-                            255
-                        ) NOT NULL,
-                            role VARCHAR
-                        (
-                            50
-                        ) NOT NULL
-                            );
-                        """)
-            conn.commit()
-        conn.close()
-        print("Veritabanı ve 'users' tablosu başarıyla başlatıldı.")
-    else:
-        print("Veritabanı başlatılamadı.")
-
-
-def create_user(username, password, role="ogretmen"):
-    """Yeni bir kullanıcı oluşturur ve veritabanına kaydeder."""
-    conn = get_connection()
-    if conn:
-        try:
-            with conn.cursor() as cur:
-                # Kullanıcı adının zaten var olup olmadığını kontrol et
-                cur.execute("SELECT id FROM users WHERE username = %s", (username,))
-                if cur.fetchone():
-                    return False, "Bu kullanıcı adı zaten mevcut."
-
-                # Yeni kullanıcıyı ekle
-                cur.execute(
-                    "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
-                    (username, password, role)
-                )
-                conn.commit()
-            conn.close()
-            return True, "Kayıt başarılı."
-        except Exception as e:
-            conn.close()
-            return False, f"Veritabanı hatası: {e}"
-    else:
-        return False, "Veritabanına bağlanılamadı."
-
-
-def verify_user(username, password, role):
-    """Kullanıcı adı, şifre ve rolü kontrol eder."""
-    conn = get_connection()
-    if conn:
-        try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT id FROM users WHERE username = %s AND password = %s AND role = %s",
-                    (username, password, role)
-                )
-                user = cur.fetchone()
-            conn.close()
-            if user:
-                return True
-            else:
-                return False
-        except Exception as e:
-            conn.close()
-            print(f"Veritabanı doğrulama hatası: {e}")
-            return False
-    else:
-        print("Veritabanına bağlanılamadı.")
-        return False
-
-
-# Bu satırları sadece test amaçlı kullanın, ana uygulamanızda zaten çağrılıyor.
-if __name__ == '__main__':
-    init_db_users()
-import psycopg2
-
-DB_HOST = "localhost"
-DB_NAME = "postgres"
-DB_USER = "postgres"
-DB_PASSWORD = "Tarsua1+20+6"
-
-
-def get_connection():
-    """PostgreSQL veritabanı bağlantısını döndürür."""
-    try:
-        conn = psycopg2.connect(
-            host=DB_HOST,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD
-        )
-        return conn
-    except Exception as e:
-        print(f"Veritabanı bağlantı hatası: {e}")
-        return None
-
-
-def init_db_users():
-    """Veritabanını başlatır ve kullanıcı tablosunu oluşturur."""
-    conn = get_connection()
-    if conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                        CREATE TABLE IF NOT EXISTS users
-                        (
-                            id
-                            SERIAL
-                            PRIMARY
-                            KEY,
-                            username
-                            VARCHAR
-                        (
-                            50
+                            100
                         ) NOT NULL UNIQUE,
                             password VARCHAR
                         (
@@ -160,33 +58,43 @@ def init_db_users():
                             );
                         """)
             conn.commit()
-        conn.close()
-        print("Veritabanı ve 'users' tablosu başarıyla başlatıldı.")
+            cur.close()
+            conn.close()
+            print("Veritabanı ve 'users' tablosu başarıyla başlatıldı.")
+        except Exception as e:
+            print(f"Tablo oluşturulurken hata oluştu: {e}")
+            if conn:
+                conn.close()
     else:
         print("Veritabanı başlatılamadı.")
 
 
-def create_user(username, password, role="ogretmen"):
+def create_user(username, email, password, role="ogretmen"):
     """Yeni bir kullanıcı oluşturur ve veritabanına kaydeder."""
     conn = get_connection()
     if conn:
         try:
-            with conn.cursor() as cur:
-                # Kullanıcı adının zaten var olup olmadığını kontrol et
-                cur.execute("SELECT id FROM users WHERE username = %s", (username,))
-                if cur.fetchone():
-                    return False, "Bu kullanıcı adı zaten mevcut."
+            # DÜZELTME: Cursor artık 'with' bloğu olmadan kullanılıyor.
+            cur = conn.cursor()
+            # Kullanıcı adının veya e-postanın zaten var olup olmadığını kontrol et
+            cur.execute("SELECT id FROM users WHERE username = %s OR email = %s", (username, email))
+            if cur.fetchone():
+                cur.close()
+                conn.close()
+                return False, "Bu kullanıcı adı veya e-posta zaten mevcut."
 
-                # Yeni kullanıcıyı ekle
-                cur.execute(
-                    "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
-                    (username, password, role)
-                )
-                conn.commit()
+            # Yeni kullanıcıyı ekle
+            cur.execute(
+                "INSERT INTO users (username, email, password, role) VALUES (%s, %s, %s, %s)",
+                (username, email, password, role)
+            )
+            conn.commit()
+            cur.close()
             conn.close()
             return True, "Kayıt başarılı."
         except Exception as e:
-            conn.close()
+            if conn:
+                conn.close()
             return False, f"Veritabanı hatası: {e}"
     else:
         return False, "Veritabanına bağlanılamadı."
@@ -197,19 +105,23 @@ def verify_user(username, password, role):
     conn = get_connection()
     if conn:
         try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT id FROM users WHERE username = %s AND password = %s AND role = %s",
-                    (username, password, role)
-                )
-                user = cur.fetchone()
+            # DÜZELTME: Cursor artık 'with' bloğu olmadan kullanılıyor.
+            cur = conn.cursor()
+            # Doğrulama sadece kullanıcı adı, şifre ve rol ile yapılır.
+            cur.execute(
+                "SELECT id FROM users WHERE username = %s AND password = %s AND role = %s",
+                (username, password, role)
+            )
+            user = cur.fetchone()
+            cur.close()
             conn.close()
             if user:
                 return True
             else:
                 return False
         except Exception as e:
-            conn.close()
+            if conn:
+                conn.close()
             print(f"Veritabanı doğrulama hatası: {e}")
             return False
     else:

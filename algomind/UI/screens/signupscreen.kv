@@ -4,10 +4,8 @@
 #:import MDCheckbox kivymd.uix.selectioncontrol.MDCheckbox
 #:import get_color_from_hex kivy.utils.get_color_from_hex
 
-#--- SignUpScreen'in Görsel Tanımı ---
 <SignUpScreen>:
     FloatLayout:
-        # Arka plan ve baloncuklar
         canvas.before:
             Color:
                 rgba: 3/255, 115/255, 252/255, 1
@@ -28,7 +26,6 @@
                 pos: self.width * 0.85, self.height * 0.65
 
 
-        # Başlık
         Label:
             text: 'Hesap Oluştur'
             font_size: '38sp'
@@ -37,7 +34,6 @@
             size_hint: None, None
             size: self.texture_size
 
-        # Beyaz form kartı
         BoxLayout:
             id: signup_form
             orientation: 'vertical'
@@ -53,7 +49,6 @@
                     pos: self.pos
                     radius: [dp(20),]
 
-            # YENİ: Öğretmen / Veli Seçim Butonları MDCheckbox ile değiştirildi.
             BoxLayout:
                 orientation: 'horizontal'
                 size_hint: 1, 0.12
@@ -70,11 +65,10 @@
                 MDCheckbox:
                     id: ogretmen_checkbox
                     group: 'role_signup'
-                    active: True # Başlangıçta 'Öğretmen' seçili olsun
+                    active: True
                     size_hint_x: None
                     width: dp(30)
                     on_active:
-                        # Eğer bu buton seçiliyse, rolü 'ogretmen' olarak ayarla
                         if self.active: root.selected_role = 'ogretmen'
                 Label:
                     text: 'Öğretmen'
@@ -89,7 +83,6 @@
                     size_hint_x: None
                     width: dp(30)
                     on_active:
-                        # Eğer bu buton seçiliyse, rolü 'veli' olarak ayarla
                         if self.active: root.selected_role = 'veli'
                 Label:
                     text: 'Veli'
@@ -98,10 +91,24 @@
                     halign: 'left'
                     valign: 'middle'
 
-            # Form Input Alanları
             TextInput:
                 id: username
                 hint_text: 'Kullanıcı Adı'
+                size_hint_y: None
+                height: dp(50)
+                multiline: False
+                background_color: 0,0,0,0
+                padding: [dp(15), (self.height - self.font_size)/2]
+                canvas.after:
+                    Color:
+                        rgba: 0.8, 0.8, 0.8, 1
+                    Line:
+                        points: self.x, self.y, self.x + self.width, self.y
+                        width: 1.2
+
+            TextInput:
+                id: email
+                hint_text: 'E-posta'
                 size_hint_y: None
                 height: dp(50)
                 multiline: False
@@ -148,7 +155,6 @@
             Widget:
                 size_hint_y: 0.2
 
-            # Kayıt Ol Butonu
             Button:
                 text: 'Kayıt Ol'
                 size_hint_y: None
@@ -156,7 +162,7 @@
                 background_color: 0,0,0,0
                 background_normal: ''
                 font_size: '18sp'
-                on_release: root.do_signup(username.text, password.text, password_confirm.text)
+                on_release: root.do_signup(username.text, password.text, password_confirm.text, email.text)
                 canvas.before:
                     Color:
                         rgba: 3/255, 115/255, 252/255, 1
@@ -165,7 +171,6 @@
                         pos: self.pos
                         radius: [dp(10)]
 
-            # Giriş Ekranına Dönüş Butonu
             Button:
                 text: 'Zaten hesabın var mı? Giriş Yap'
                 size_hint_y: None
