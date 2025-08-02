@@ -3,7 +3,6 @@
 #:import get_color_from_hex kivy.utils.get_color_from_hex
 #:import MDTopAppBar kivymd.uix.toolbar.MDTopAppBar
 #:import MDScreen kivymd.uix.screen.MDScreen
-#:import ButtonBehavior kivy.uix.behaviors.button.ButtonBehavior
 
 
 <TestButton@ButtonBehavior+BoxLayout>:
@@ -29,7 +28,7 @@
 
     Image:
         source: root.icon_source
-        size_hint_y: 0.3
+        size_hint_y: 0.2
         pos_hint: {'x': -0.3, 'top': 0.92}
         allow_stretch: True
 
@@ -67,9 +66,11 @@
                 pos: self.pos
                 size: self.size
 
+        # Yeni üst çubuk (MDTopAppBar) eklendi
         MDTopAppBar:
             title: "Test Seçimi"
             elevation: 0
+            # Menü butonu, TestSecimEkrani sınıfındaki metodu çağırır.
             left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open" if app.root.ids.nav_drawer.state == "close" else "close")]]
             md_bg_color: (74/255, 144/255, 226/255, 1)
 
@@ -78,47 +79,44 @@
             padding: dp(20)
             spacing: dp(15)
 
+            # --- REVISED HEADER ARTIK KULLANILMIYOR ---
+
+            # Test butonları alanı
             GridLayout:
                 cols: 2
                 spacing: dp(20)
                 padding: dp(20)
 
-                # --- DÜZELTME: on_release eylemleri app.start_test'i çağıracak şekilde güncellendi ---
-
+                # Tüm butonlar için text_boxed özelliği True olarak ayarlandı
                 TestButton:
                     text: "Matematik"
-                    icon_source: 'algomind/assets/math.png'
-                    on_release: app.start_test('math') # Düzeltildi
+                    icon_source: 'algomind/assets/mat.png'
+                    on_release: root.go_to_test_screen()
                     text_boxed: True
 
                 TestButton:
-                    text: "Hayvanlar"
-                    icon_source: 'algomind/assets/animal.png' # Bu resmi eklemeniz gerekebilir
-                    on_release: app.start_test('animal') # Düzeltildi
+                    text: "Fen Bilgisi"
+                    icon_source: 'algomind/assets/fen.png'
+                    on_release: root.go_to_test_screen()
                     text_boxed: True
-
                 TestButton:
-                    text: "Renkler"
-                    icon_source: 'algomind/assets/color.png' # Bu resmi eklemeniz gerekebilir
-                    on_release: app.start_test('color') # Düzeltildi
+                    text: "Türkçe"
+                    icon_source: 'algomind/assets/fen.png'
+                    on_release: root.go_to_test_screen()
                     text_boxed: True
-
                 TestButton:
-                    text: "Yiyecekler"
-                    icon_source: 'algomind/assets/food.png' # Bu resmi eklemeniz gerekebilir
-                    on_release: app.start_test('food') # Düzeltildi
+                    text: "Sosyal"
+                    icon_source: 'algomind/assets/sos.png'
+                    on_release: root.go_to_test_screen()
+                    on_release: root.go_to_test_screen()
                     text_boxed: True
-
-                # Not: Aşağıdaki testlerin mantığını examScreen.py'a eklemeniz gerekecektir.
-                # Şimdilik sadece kimliklerini gönderiyorlar.
                 TestButton:
-                    text: "Objeler"
-                    icon_source: 'algomind/assets/object.png'
-                    on_release: app.start_test('object') # Düzeltildi
+                    text: "İngilizce"
+                    icon_source: 'algomind/assets/ing.png'
+                    on_release: root.go_to_test_screen()
                     text_boxed: True
-
                 TestButton:
-                    text: "Meyve Sebzeler"
-                    icon_source: 'algomind/assets/fruit_vegetable.png' # Resim yolu düzeltildi
-                    on_release: app.start_test('synonymAntonym') # Düzeltildi
+                    text: "Genel Test"
+                    icon_source: 'algomind/assets/gen.png'
+                    on_release: root.go_to_test_screen()
                     text_boxed: True

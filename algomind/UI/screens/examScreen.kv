@@ -1,98 +1,93 @@
 #:kivy 2.1.0
+#:import Window kivy.core.window.Window
 #:import get_color_from_hex kivy.utils.get_color_from_hex
-#:import Clock kivy.clock.Clock
+
+<WobblyButton@Button>:
+    font_name: 'algomind/assets/GochiHand-Regular.ttf'
+    font_size: '22sp'
+    color: (1, 1, 1, 1)
+    size_hint: (0.45, None)
+    height: dp(60)
+    background_normal: ''
+    background_down: ''
+    background_color: get_color_from_hex('#4990e2') if self.state == 'normal' else get_color_from_hex('#407dbf')
+
+    canvas.after:
+        Color:
+            rgba: (1, 1, 1, 1)
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+            width: 1.5
+
+<WobblyLabel@Label>:
+    font_name: 'algomind/assets/GochiHand-Regular.ttf'
+    font_size: '22sp'
+    color: (1, 1, 1, 1)
+    size_hint: (0.45, None)
+    height: dp(60)
+
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex('#4990e2')
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(15)]
+    canvas.after:
+        Color:
+            rgba: (1, 1, 1, 1)
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+            width: 1.5
 
 <TestScreen>:
     name: 'test_screen'
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex('#4990e2')
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
-        md_bg_color: get_color_from_hex('#F0F2F5') # Açık gri arka plan
-        padding: dp(20)
-        spacing: dp(15)
-
-        # Üst Bar
-        MDBoxLayout:
+        padding: dp(15)
+        spacing: dp(10)
+        BoxLayout:
             orientation: 'horizontal'
             size_hint_y: None
-            height: dp(60)
-            spacing: dp(15)
-            adaptive_height: True
+            height: dp(70)
+            spacing: dp(10)
+            WobblyLabel:
+                text: root.student_name
+            WobblyLabel:
+                text: root.formatted_time
 
-            MDCard:
-                md_bg_color: get_color_from_hex('#FFFFFF')
-                radius: [dp(15),]
-                padding: dp(10)
-                MDLabel:
-                    text: root.student_name
-                    halign: 'center'
-                    font_style: 'H6'
-                    theme_text_color: 'Primary'
+        RelativeLayout:
+            size_hint_y: 0.8
 
-            MDCard:
-                md_bg_color: get_color_from_hex('#FFFFFF')
-                radius: [dp(15),]
-                padding: dp(10)
-                MDLabel:
-                    text: root.formatted_time
-                    halign: 'center'
-                    font_style: 'H6'
-                    theme_text_color: 'Primary'
+            Image:
+                id: apple_image
+                source: 'algomind/assets/apple.png'
+                size_hint: (0.6, 0.6)
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                allow_stretch: True
 
-        # Soru Sayacı
-        MDLabel:
-            id: question_counter
-            text: root.question_counter_text
-            halign: 'center'
-            font_style: 'Body1'
+        BoxLayout:
+            orientation: 'horizontal'
             size_hint_y: None
-            height: self.texture_size[1]
-            theme_text_color: 'Secondary'
+            height: dp(70)
+            spacing: dp(10)
+            WobblyButton:
+                text: 'Elma'
+            WobblyButton:
+                text: 'Armut'
 
-
-        # Ana İçerik Kartı
-        MDCard:
-            orientation: 'vertical'
-            size_hint: 1, 1
-            md_bg_color: get_color_from_hex('#FFFFFF')
-            radius: [dp(20),]
-            padding: dp(20)
-            spacing: dp(15)
-
-            # Soru Metni
-            MDLabel:
-                id: question_text_label
-                text: root.question_text
-                halign: 'center'
-                font_style: 'H5'
-                size_hint_y: None
-                height: self.texture_size[1]
-                theme_text_color: 'Primary'
-
-            # Resim/Soru İçerik Alanı
-            MDBoxLayout:
-                id: image_area
-                size_hint_y: 0.6
-                padding: dp(10)
-
-            # Seçenekler Alanı
-            MDBoxLayout:
-                id: options_area
-                orientation: 'horizontal'
-                # Yalnızca çocukların ihtiyaç duyduğu kadar yer kapla
-                size_hint: (None, None)
-                # Genişliği ve yüksekliği çocuklara göre ayarla
-                width: self.minimum_width
-                height: self.minimum_height
-                # Ebeveynin ortasına hizala
+        RelativeLayout:
+            size_hint_y: None
+            height: dp(70)
+            WobblyButton:
+                text: 'Testi Bitir'
                 pos_hint: {'center_x': 0.5}
-                spacing: dp(20) # Butonlar arası boşluk
-
-                # --- TEST BUTONLARI ---
-                MDRaisedButton:
-                    text: "Seçenek A"
-                MDRaisedButton:
-                    text: "Seçenek B"
-                # --- TEST BUTONLARI SONU ---
-
-
+                # DÜZELTME: Ekran geçişi için app.root.ids.screen_manager.current kullanıldı.
+                on_release: app.root.ids.screen_manager.current = 'rapor_ekrani_screen'
