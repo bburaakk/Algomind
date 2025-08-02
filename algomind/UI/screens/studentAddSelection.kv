@@ -94,7 +94,7 @@
             color: (1,1,1,1)
             font_size: '18sp'
         IconLabel:
-            text: '\uF0142' # Chevron-right icon
+            text: '2' # Chevron-right icon
             color: (1,1,1,1)
             font_size: '22sp'
             size_hint_x: None
@@ -213,9 +213,10 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # MDTopAppBar eklendi
+        # MDTopAppBar eklendi ve başlık ortalandı
         MDTopAppBar:
             title: "Öğrenci Yönetimi"
+            title_halign: 'center'
             elevation: 10
             left_action_items: [['menu', lambda x: root.toggle_navigation_drawer()]]
             md_bg_color: (74/255, 144/255, 226/255, 1)
@@ -244,9 +245,9 @@
                             id: search_input
                             hint_text: "Öğrencileri Ara..."
                             on_text: root.search_students(self.text)
-                            pos_hint: {'center_y': 0.35}
-                            x: self.parent.x + dp(50)
-                            size_hint_x: 0.85
+                            # TextInput ortalandı
+                            pos_hint: {'center_x': 0.5, 'center_y': 0.4}
+                            size_hint_x: 1
                             background_color: (0,0,0,0)
                             foreground_color: get_color_from_hex('#1F2933')
                             cursor_color: get_color_from_hex('#1F2933')
