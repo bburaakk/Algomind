@@ -1,101 +1,77 @@
-# Düzeltme: psycopg2 yerine pg8000 kullanılıyor
-import pg8000.dbapi as pg
+import requests
+import os
 
-# PostgreSQL bağlantı bilgileri
-DB_HOST = "192.168.1.103"
-DB_NAME = "postgres"
-DB_USER = "postgres"
-DB_PASSWORD = "Tarsua1+20+6"
+API_BASE_URL = "http://35.202.188.175:8080"  # VM IP adresin
+TOKEN_FILE = "auth_token.txt"
 
+class AuthService:
+    def do_signup(self, email, password, role, ad, soyad, username):
+        try:
+            # DÜZELTME: Sunucu 'ad' ve 'soyad' yerine 'first_name' ve 'last_name' bekliyor.
+            payload = {
+                "email": email,
+                "password": password,
+                "role": role,
+                "username": username,
+                "first_name": ad,
+                "last_name": soyad
+            }
+            response = requests.post(
+                f"{API_BASE_URL}/signup",
+                json=payload  # Veri JSON formatında gönderiliyor
+            )
+            if response.status_code == 200:
+                return True, "Signup successful"
+            else:
+                return False, response.json().get("detail", "Signup failed")
+        except Exception as e:
+            return False, str(e)
 
-def get_connection():
-    """PostgreSQL veritabanı bağlantısını pg8000 ile döndürür."""
-    try:
-        conn = pg.connect(
-            user=DB_USER,
-            password=DB_PASSWORD,
-            host=DB_HOST,
-            database=DB_NAME
-        )
-        return conn
-    except Exception as e:
-        print(f"Veritabanı bağlantı hatası: {e}")
+    def login(self, email, password):
+        try:
+            # DÜZELTME: Sunucu JSON veri bekliyor, bu yüzden 'json=' kullanıyoruz.
+            # Sunucu e-posta alanı için 'username' anahtarını bekliyor.
+            payload = {'username': email, 'password': password}
+            response = requests.post(
+                f"{API_BASE_URL}/login",
+                json=payload
+            )
+            if response.status_code == 200:
+                token = response.json().get("access_token")
+                self._save_token(token)
+                return True, "Login successful"
+            else:
+                try:
+                    detail = response.json().get("detail", "Login failed")
+                except requests.exceptions.JSONDecodeError:
+                    detail = response.text
+                return False, detail
+        except Exception as e:
+            return False, str(e)
+
+    def _save_token(self, token):
+        with open(TOKEN_FILE, "w") as f:
+            f.write(token)
+
+    def get_token(self):
+        if os.path.exists(TOKEN_FILE):
+            with open(TOKEN_FILE, "r") as f:
+                return f.read().strip()
         return None
 
-
-def init_db_users():
-    """Veritabanını başlatır ve kullanıcı tablosunu oluşturur."""
-    conn = get_connection()
-    if conn:
+    def get_user_role(self):
+        token = self.get_token()
+        if not token:
+            return None
         try:
-            cur = conn.cursor()
-            # DÜZELTME: 'ad' ve 'soyad' sütunları eklendi.
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE, ad VARCHAR(50), soyad VARCHAR(50), email VARCHAR(100) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, role VARCHAR(50) NOT NULL);")
-            conn.commit()
-            cur.close()
-            conn.close()
-            print("Veritabanı ve 'users' tablosu başarıyla başlatıldı.")
-        except Exception as e:
-            print(f"Tablo oluşturulurken hata oluştu: {e}")
-            if conn:
-                conn.close()
-    else:
-        print("Veritabanı başlatılamadı.")
-
-
-def create_user(username, ad, soyad, email, password, role="ogretmen"):
-    """Yeni bir kullanıcı oluşturur ve veritabanına kaydeder."""
-    conn = get_connection()
-    if conn:
-        try:
-            cur = conn.cursor()
-            cur.execute("SELECT id FROM users WHERE username = %s OR email = %s", (username, email))
-            if cur.fetchone():
-                cur.close()
-                conn.close()
-                return False, "Bu kullanıcı adı veya e-posta zaten mevcut."
-
-            # DÜZELTME: 'ad' ve 'soyad' bilgileri de INSERT sorgusuna eklendi.
-            cur.execute(
-                "INSERT INTO users (username, ad, soyad, email, password, role) VALUES (%s, %s, %s, %s, %s, %s)",
-                (username, ad, soyad, email, password, role)
+            response = requests.get(
+                f"{API_BASE_URL}/user/me",
+                headers={"Authorization": f"Bearer {token}"}
             )
-            conn.commit()
-            cur.close()
-            conn.close()
-            return True, "Kayıt başarılı."
-        except Exception as e:
-            if conn:
-                conn.close()
-            return False, f"Veritabanı hatası: {e}"
-    else:
-        return False, "Veritabanına bağlanılamadı."
+            if response.status_code == 200:
+                return response.json().get("role")
+            return None
+        except Exception:
+            return None
 
-
-def verify_user(username, password, role):
-    """Kullanıcı adı, şifre ve rolü kontrol eder."""
-    conn = get_connection()
-    if conn:
-        try:
-            cur = conn.cursor()
-            cur.execute(
-                "SELECT id FROM users WHERE username = %s AND password = %s AND role = %s",
-                (username, password, role)
-            )
-            user = cur.fetchone()
-            cur.close()
-            conn.close()
-            if user:
-                return True
-            else:
-                return False
-        except Exception as e:
-            if conn:
-                conn.close()
-            print(f"Veritabanı doğrulama hatası: {e}")
-            return False
-    else:
-        print("Veritabanına bağlanılamadı.")
-        return False
-
+auth_service = AuthService()

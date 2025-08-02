@@ -1,0 +1,171 @@
+#:kivy 2.1.0
+#:import dp kivy.metrics.dp
+
+<LoginScreen>:
+    FloatLayout:
+        canvas.before:
+            # Dalgalı üst kısım için mavi renk
+            Color:
+                rgba: 3/255, 115/255, 252/255, 1
+            RoundedRectangle:
+                size: self.width, self.height * 0.6
+                pos: 0, self.height * 0.4
+                radius: [0, 0, dp(40), dp(40)]
+            # Arka plandaki yarı saydam baloncuklar
+            Color:
+                rgba: 1, 1, 1, 0.1
+            Ellipse:
+                size: dp(50), dp(50)
+                pos: self.width * 0.7, self.height * 0.85
+            Ellipse:
+                size: dp(80), dp(80)
+                pos: self.width * 0.2, self.height * 0.7
+            Ellipse:
+                size: dp(30), dp(30)
+                pos: self.width * 0.85, self.height * 0.65
+
+        # HOCA / VELİ SEÇİM BUTONLARI
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: 0.6, 0.08
+            pos_hint: {'center_x': 0.5, 'top': 0.8}
+            spacing: dp(10)
+
+        # Beyaz Giriş Formu Kutusu - ScrollView eklendi
+        ScrollView:
+            size_hint: 0.9, 0.7
+            pos_hint: {'center_x': 0.5, 'y': 0.02}
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [dp(20),]
+
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(25), dp(40), dp(25), dp(40)
+                spacing: dp(15)
+                size_hint_y: None
+                height: self.minimum_height
+
+                TextInput:
+                    id: login
+                    hint_text: 'Kullanıcı Adı'
+                    size_hint_y: None
+                    height: dp(50)
+                    multiline: False
+                    background_color: 0,0,0,0
+                    foreground_color: 0.1, 0.1, 0.1, 1
+                    font_size: '16sp'
+                    cursor_color: 3/255, 115/255, 252/255, 1
+                    padding: [dp(15), (self.height - self.font_size)/2]
+                    canvas.after:
+                        Color:
+                            rgba: 0.8, 0.8, 0.8, 1
+                        Line:
+                            points: self.x, self.y, self.x + self.width, self.y
+                            width: 1.2
+
+                TextInput:
+                    id: password
+                    hint_text: 'Şifre'
+                    password: True
+                    size_hint_y: None
+                    height: dp(50)
+                    multiline: False
+                    background_color: 0,0,0,0
+                    foreground_color: 0.1, 0.1, 0.1, 1
+                    font_size: '16sp'
+                    cursor_color: 3/255, 115/255, 252/255, 1
+                    padding: [dp(15), (self.height - self.font_size)/2]
+                    canvas.after:
+                        Color:
+                            rgba: 0.8, 0.8, 0.8, 1
+                        Line:
+                            points: self.x, self.y, self.x + self.width, self.y
+                            width: 1.2
+
+                Widget:
+                    size_hint_y: 0.1
+
+                Button:
+                    text: 'Giriş Yap'
+                    size_hint_y: None
+                    height: dp(50)
+                    background_color: 0,0,0,0
+                    background_normal: ''
+                    font_size: '18sp'
+                    on_release: root.do_login(login.text, password.text)
+                    canvas.before:
+                        Color:
+                            rgba: 3/255, 115/255, 252/255, 1
+                        RoundedRectangle:
+                            size: self.size
+                            pos: self.pos
+                            radius: [dp(10)]
+
+                # Demo Giriş Butonları
+                Label:
+                    text: 'Demo Giriş (API olmadan test için)'
+                    color: 0.6, 0.6, 0.6, 1
+                    size_hint_y: None
+                    height: dp(25)
+                    font_size: '14sp'
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: dp(45)
+                    spacing: dp(10)
+
+                    Button:
+                        text: 'Demo Öğretmen'
+                        background_color: 0,0,0,0
+                        background_normal: ''
+                        color: 0.2, 0.7, 0.2, 1
+                        font_size: '16sp'
+                        on_release: root.demo_login_ogretmen()
+                        canvas.before:
+                            Color:
+                                rgba: 0.2, 0.7, 0.2, 1
+                            Line:
+                                width: 1.2
+                                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+
+                    Button:
+                        text: 'Demo Veli'
+                        background_color: 0,0,0,0
+                        background_normal: ''
+                        color: 0.7, 0.2, 0.7, 1
+                        font_size: '16sp'
+                        on_release: root.demo_login_veli()
+                        canvas.before:
+                            Color:
+                                rgba: 0.7, 0.2, 0.7, 1
+                            Line:
+                                width: 1.2
+                                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+
+                Label:
+                    text: 'ya da'
+                    color: 0.6, 0.6, 0.6, 1
+                    size_hint_y: None
+                    height: dp(25)
+
+                Button:
+                    text: 'Kayıt Ol'
+                    size_hint_y: None
+                    height: dp(50)
+                    background_color: 0,0,0,0
+                    background_normal: ''
+                    color: 3/255, 115/255, 252/255, 1
+                    font_size: '18sp'
+                    on_release: app.root.ids.screen_manager.current = 'signup_screen'
+                    canvas.before:
+                        Color:
+                            rgba: 3/255, 115/255, 252/255, 1
+                        Line:
+                            width: 1.2
+                            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))

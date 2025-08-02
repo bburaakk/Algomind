@@ -1,95 +1,105 @@
 #:kivy 2.1.0
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import MDTopAppBar kivymd.uix.toolbar.MDTopAppBar
+#:import MDScreen kivymd.uix.screen.MDScreen
+#:import MDCard kivymd.uix.card.MDCard
+#:import MDLabel kivymd.uix.label.MDLabel
+#:import MDSeparator kivymd.uix.card.MDSeparator
+#:import OneLineIconListItem kivymd.uix.list.OneLineIconListItem
+#:import IconLeftWidget kivymd.uix.list.IconLeftWidget
+#:import MDFillRoundFlatButton kivymd.uix.button.MDFillRoundFlatButton
+#:import FitImage kivymd.uix.fitimage.FitImage
 
 <ProfileEkrani>:
-    canvas.before:
-        Color:
-            # Arkaplan rengi
-            rgba: (75/255, 137/255, 204/255, 1)
-        Rectangle:
-            pos: self.pos
-            size: self.size
+    name: 'profile_screen' # <-- Adı doğru kullandığımızdan emin olalım
 
     BoxLayout:
         orientation: 'vertical'
-        padding: dp(30)
-        spacing: dp(15)
+        canvas.before:
+            Color:
+                rgba: get_color_from_hex('#F0F4F8')
+            Rectangle:
+                pos: self.pos
+                size: self.size
 
-        # Üstte boşluk bırakarak ortalamak için
-        Widget:
-            size_hint_y: 0.6
+        # --- YAN MENÜYÜ AÇACAK OLAN ÜST ÇUBUK ---
+        MDTopAppBar:
+            title: "Profil"
+            elevation: 0
+            # Geri butonu yerine menü butonu ekliyoruz.
+            # Bu kod, ana menünün state'ini (açık/kapalı) değiştirir.
+            left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open" if app.root.ids.nav_drawer.state == "close" else "close")]]
+            md_bg_color: get_color_from_hex('#F0F4F8')
+            specific_text_color: get_color_from_hex('#1E3A5F')
 
-        # Profil Resmi
-        Image:
-            # ÖNEMLİ: Bu yolu kendi profil resmi dosyanızla değiştirin.
-            source: 'algomind/assets/profile.png'
-            size_hint: None, None
-            size: dp(150), dp(150)
-            pos_hint: {'center_x': 0.5}
-            # Resmi dairesel yapmak için canvas talimatları
-            canvas.before:
-                StencilPush
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    # Yarıçapı genişliğin yarısı yaparak daire oluştururuz
-                    radius: [self.width / 2]
-                StencilUse
-            canvas.after:
-                StencilUnUse
-                StencilPop
+        ScrollView:
+            bar_width: dp(8)
+            bar_color: get_color_from_hex('#357ABD')
 
+            GridLayout:
+                cols: 1
+                padding: dp(20)
+                spacing: dp(20)
+                size_hint_y: None
+                height: self.minimum_height
 
-        # Kullanıcı Adı
-        Label:
-            text: root.username
-            font_size: '32sp'
-            color: (1, 1, 1, 1)
-            size_hint_y: None
-            height: self.texture_size[1]
-            bold: True
+                # --- Profil Başlık Kartı ---
+                MDCard:
+                    orientation: 'vertical'
+                    padding: dp(25)
+                    spacing: dp(10)
+                    size_hint_y: None
+                    height: self.minimum_height
+                    md_bg_color: 1, 1, 1, 1
+                    radius: [dp(15)]
 
-        # Ortada boşluk bırakmak için
-        Widget:
-            size_hint_y: 1.0
+                    MDCard:
+                        radius: [dp(60)]
+                        size_hint: None, None
+                        size: dp(120), dp(120)
+                        pos_hint: {'center_x': 0.5}
+                        md_bg_color: 1, 1, 1, 1
+                        elevation: 0
+                        FitImage:
+                            source: 'algomind/assets/profile.png'
+                            radius: [dp(60)]
 
-        # Geri Butonu (YENİ EKLENDİ)
-        Button:
-            text: 'Geri'
-            font_size: '22sp'
-            size_hint: (0.7, None)
-            height: dp(60)
-            pos_hint: {'center_x': 0.5}
-            color: (1, 1, 1, 1)
-            background_color: (0, 0, 0, 0)
-            # Tıklandığında bir önceki ekrana döner.
-            # Bu komut, uygulamanızın ana widget'ının (app.root) bir ScreenManager olduğunu varsayar.
-            on_release: root.geri_git()
+                    MDLabel:
+                        id: name_label
+                        text: "Kullanıcı Adı"
+                        font_style: "H5"
+                        halign: 'center'
+                        color: get_color_from_hex('#1E3A5F')
+                        adaptive_height: True
+                        padding: [0, dp(10), 0, 0]
 
-            canvas.before:
-                Color:
-                    rgba: (1, 1, 1, 1)
-                Line:
-                    width: 1.5
-                    rounded_rectangle: (self.x, self.y, self.width, self.height, dp(30))
+                    MDLabel:
+                        id: email_label
+                        text: "kullanici@email.com"
+                        font_style: "Body1"
+                        halign: 'center'
+                        theme_text_color: "Secondary"
+                        adaptive_height: True
 
-        # Çıkış Yap Butonu
-        Button:
-            text: 'Çıkış Yap'
-            font_size: '22sp'
-            size_hint: (0.7, None)
-            height: dp(60)
-            pos_hint: {'center_x': 0.5}
-            color: (1, 1, 1, 1)
-            background_color: (0, 0, 0, 0)
-            on_release: root.cikis_yap()
+                # --- İşlem Menüsü Kartı ---
+                MDCard:
+                    orientation: 'vertical'
+                    padding: [dp(8), dp(8), dp(8), dp(8)]
+                    size_hint_y: None
+                    height: self.minimum_height
+                    md_bg_color: 1, 1, 1, 1
+                    radius: [dp(15)]
 
-            canvas.before:
-                Color:
-                    rgba: (1, 1, 1, 1)
-                Line:
-                    width: 1.5
-                    rounded_rectangle: (self.x, self.y, self.width, self.height, dp(30))
+                    OneLineIconListItem:
+                        text: "Profili Düzenle"
+                        on_release: root.edit_profile()
+                        IconLeftWidget:
+                            icon: "account-edit-outline"
 
-        # Altta küçük bir boşluk
-        Widget:
-            size_hint_y: 0.1
+                    MDSeparator:
+
+                    OneLineIconListItem:
+                        text: "Şifre Değiştir"
+                        on_release: root.change_password()
+                        IconLeftWidget:
+                            icon: "lock-reset"
