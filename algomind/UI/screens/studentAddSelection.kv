@@ -272,6 +272,11 @@
                         spacing: dp(10)
                         PrimaryBottomButton:
                             on_release: root.ids.content_manager.current = 'ekle_view'
+                            # Veli ise butonu gizle ve devre dışı bırak
+                            opacity: 0 if app.user_role == 'veli' else 1
+                            disabled: True if app.user_role == 'veli' else False
+                            height: 0 if app.user_role == 'veli' else dp(55)
+                            size_hint_y: 0 if app.user_role == 'veli' else None
                         SecondaryBottomButton:
                             on_release: root.go_to_test_secim()
 
@@ -400,4 +405,3 @@
                             CancelButton:
                                 text: "İptal"
                                 on_release: root.ids.content_manager.current = 'secim_view'
-

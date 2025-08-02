@@ -1,13 +1,13 @@
-from kivy.uix.screenmanager import Screen
-from kivy.properties import ObjectProperty, StringProperty, ListProperty
-from kivy.uix.boxlayout import BoxLayout
+from algomind.screens.baseScreen import BaseScreen
 from kivymd.app import MDApp
 
 
-class TestSecimEkrani(Screen):
+class TestSecimEkrani(BaseScreen):
     """
-    Test seçim ekranının Python tarafındaki sınıfı.
-    Bu sınıf, buton tıklamalarını ve ekran geçişlerini yönetir.
+    Test seçim ekranı.
+
+    Bu ekran, kullanıcıların mevcut testler arasından birini seçip
+    başlatmalarını sağlar.
     """
 
     def go_to_profile(self):
@@ -22,7 +22,7 @@ class TestSecimEkrani(Screen):
         self.manager.current = 'test_screen'
 
     def toggle_navigation_drawer(self):
-        """Navigation drawer'ı açıp kapatır."""
+        """Gezinme menüsünü (navigation drawer) açıp kapatır."""
         # Ana MDApp objesine erişim
         app = MDApp.get_running_app()
         nav_drawer = app.root.ids.nav_drawer

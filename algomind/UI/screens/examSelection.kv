@@ -61,7 +61,7 @@
         orientation: 'vertical'
         canvas.before:
             Color:
-                rgba: (74/255, 144/255, 226/255, 1)
+                rgba: get_color_from_hex('#F0F4F8')
             Rectangle:
                 pos: self.pos
                 size: self.size
@@ -69,9 +69,9 @@
         # Yeni üst çubuk (MDTopAppBar) eklendi
         MDTopAppBar:
             title: "Test Seçimi"
-            elevation: 10
+            elevation: 0
             # Menü butonu, TestSecimEkrani sınıfındaki metodu çağırır.
-            eft_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open" if app.root.ids.nav_drawer.state == "close" else "close")]]
+            left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open" if app.root.ids.nav_drawer.state == "close" else "close")]]
             md_bg_color: (74/255, 144/255, 226/255, 1)
 
         BoxLayout:
@@ -101,12 +101,13 @@
                     text_boxed: True
                 TestButton:
                     text: "Türkçe"
-                    icon_source: 'algomind/assets/türk.png'
+                    icon_source: 'algomind/assets/fen.png'
                     on_release: root.go_to_test_screen()
                     text_boxed: True
                 TestButton:
                     text: "Sosyal"
                     icon_source: 'algomind/assets/sos.png'
+                    on_release: root.go_to_test_screen()
                     on_release: root.go_to_test_screen()
                     text_boxed: True
                 TestButton:

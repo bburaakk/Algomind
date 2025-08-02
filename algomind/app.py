@@ -1,47 +1,58 @@
 from kivymd.app import MDApp
 from kivy.properties import StringProperty
 from kivy.lang import Builder
-from kivy.uix.screenmanager import ScreenManager
-from kivy.metrics import dp
-
-# Ekran sınıflarını import edelim
-from algomind.screens.login_screen import LoginScreen
-from algomind.screens.signup_screen import SignUpScreen
-from algomind.screens.test_screen import TestScreen
-from algomind.screens.rapor_ekrani import RaporEkrani
+from algomind.screens.loginScreen import LoginScreen
+from algomind.screens.signupScreen import SignUpScreen
+from algomind.screens.examScreen import TestScreen
+from algomind.screens.reportScreen import RaporEkrani
 from algomind.screens.profile import ProfileEkrani
-from algomind.screens.test_secim import TestSecimEkrani
-from algomind.screens.ogrenciEkleSec import OgrenciYonetimEkrani
-# YENİ: Veli ana ekranını import ediyoruz
-from algomind.screens.veli_ana_ekran import VeliAnaEkrani
-from algomind.data import database
+from algomind.screens.examSelection import TestSecimEkrani
+from algomind.screens.studentAddSelection import OgrenciYonetimEkrani
+from algomind.helpers import clear_text_inputs
 
 
-class TestApp(MDApp):
+class MainApp(MDApp):
+    """
+    Ana uygulama sınıfı.
+
+    Bu sınıf, uygulamanın ana giriş noktasını temsil eder ve KivyMD uygulamasının
+    yaşam döngüsünü yönetir. Uygulama temasını, ekranları ve gezinme menüsünü
+    ayarlar.
+
+    Attributes:
+        title (str): Uygulamanın başlığı.
+        logged_in_user (StringProperty): Giriş yapmış kullanıcının adını tutar.
+        user_role (StringProperty): Giriş yapmış kullanıcının rolünü (öğretmen/veli) tutar.
+    """
     title = "Algomind"
     logged_in_user = StringProperty('')
-    user_role = StringProperty('')  # Kullanıcının rolü için property
+    user_role = StringProperty('')
 
     def build(self):
+        """
+        Uygulama arayüzünü oluşturur ve yapılandırır.
+
+        Bu metod, uygulama başlatıldığında Kivy tarafından çağrılır. Tema ayarlarını
+        yapar, .kv dosyalarını yükler, ekran yöneticisini ve gezinme menüsünü
+        oluşturur ve başlangıç ekranını ayarlar.
+
+        Returns:
+            MDNavigationLayout: Uygulamanın kök widget'ı.
+        """
         self.theme_cls.primary_palette = "Blue"
         self.theme_cls.theme_style = "Light"
 
-        # DÜZELTME: Veritabanı başlatma işlemi, KV dosyaları yüklenmeden önce yapılmalıdır.
-        database.init_db_users()
-
         # Tüm ekranları yükle
-        Builder.load_file('algomind/UI/screens/raporekrani.kv')
-        Builder.load_file('algomind/UI/screens/loginscreen.kv')
-        Builder.load_file('algomind/UI/screens/signupscreen.kv')
-        Builder.load_file('algomind/UI/screens/testscreen.kv')
+        Builder.load_file('algomind/UI/screens/reportScreen.kv')
+        Builder.load_file('algomind/UI/screens/loginScreen.kv')
+        Builder.load_file('algomind/UI/screens/signupScreen.kv')
+        Builder.load_file('algomind/UI/screens/examScreen.kv')
         Builder.load_file('algomind/UI/screens/profile.kv')
-        Builder.load_file('algomind/UI/screens/test_secim.kv')
-        Builder.load_file('algomind/UI/screens/ogrenciEkleSec.kv')
-        # YENİ: Veli ana ekranının KV dosyasını yüklüyoruz
-        Builder.load_file('algomind/UI/screens/veli_ana_ekran.kv')
+        Builder.load_file('algomind/UI/screens/examSelection.kv')
+        Builder.load_file('algomind/UI/screens/studentAddSelection.kv')
 
         # Ana layout'u oluştur.
-        main_layout = Builder.load_string("""
+        main_layout = Builder.load_string('''
 MDNavigationLayout:
     id: nav_layout
     MDScreenManager:
@@ -68,95 +79,41 @@ MDNavigationLayout:
                     font_style: "H6"
                     halign: "center"
 
-            # Öğretmen için menü öğeleri
+            # Birleştirilmiş menü listesi
             MDList:
-                id: ogretmen_menu_list
-                size_hint_y: None
-                height: self.minimum_height if app.get_running_app().user_role == 'ogretmen' else 0
+                id: menu_list
                 OneLineIconListItem:
                     text: "Profil"
-                    on_release:
-                        app.root.ids.screen_manager.get_screen('profile_screen').return_to_screen = app.root.ids.screen_manager.current
-                        app.root.ids.screen_manager.current = 'profile_screen'
-                        app.root.ids.nav_drawer.set_state("close")
+                    on_release: app.switch_screen('profile_screen')
                     IconLeftWidget:
                         icon: "account-circle"
                 OneLineIconListItem:
                     text: "Öğrenci Yönetimi"
-                    on_release:
-                        app.root.ids.screen_manager.current = 'ogrenciEkleSec_screen'
-                        app.root.ids.nav_drawer.set_state("close")
+                    on_release: app.switch_screen('ogrenciEkleSec')
                     IconLeftWidget:
                         icon: "account-multiple"
                 OneLineIconListItem:
                     text: "Rapor Ekranı"
-                    on_release:
-                        app.root.ids.screen_manager.current = 'rapor_ekrani_screen'
-                        app.root.ids.nav_drawer.set_state("close")
+                    on_release: app.switch_screen('rapor_ekrani_screen')
                     IconLeftWidget:
                         icon: "file-chart"
                 OneLineIconListItem:
                     text: "Test Seçimi"
-                    on_release:
-                        app.root.ids.screen_manager.current = 'test_secim'
-                        app.root.ids.nav_drawer.set_state("close")
+                    on_release: app.switch_screen('test_secim')
                     IconLeftWidget:
-                        icon: "library-books"
-                OneLineIconListItem:
-                    text: "Test Ekranı"
-                    on_release:
-                        app.root.ids.screen_manager.current = 'test_screen'
-                        app.root.ids.nav_drawer.set_state("close")
-                    IconLeftWidget:
-                        icon: "pencil-box-multiple"
+                        icon: "clipboard-check-outline"
 
-            # Veli için menü öğeleri
-            MDList:
-                id: veli_menu_list
-                size_hint_y: None
-                height: self.minimum_height if app.get_running_app().user_role == 'veli' else 0
-                OneLineIconListItem:
-                    text: "Ana Sayfa"
-                    on_release:
-                        app.root.ids.screen_manager.current = 'veli_ana_ekran'
-                        app.root.ids.nav_drawer.set_state("close")
-                    IconLeftWidget:
-                        icon: "home"
-                OneLineIconListItem:
-                    text: "Profil"
-                    on_release:
-                        app.root.ids.screen_manager.get_screen('profile_screen').return_to_screen = app.root.ids.screen_manager.current
-                        app.root.ids.screen_manager.current = 'profile_screen'
-                        app.root.ids.nav_drawer.set_state("close")
-                    IconLeftWidget:
-                        icon: "account-circle"
-                OneLineIconListItem:
-                    text: "Test Sonuçları"
-                    on_release:
-                        app.root.ids.screen_manager.current = 'test_screen'
-                        app.root.ids.nav_drawer.set_state("close")
-                    IconLeftWidget:
-                        icon: "check-all"
-
-            # Ortak menü öğeleri
+            # Ortak menü öğeleri (sadece çıkış)
             MDList:
                 id: ortak_menu_list
                 size_hint_y: None
                 height: self.minimum_height
                 OneLineIconListItem:
-                    text: "Ayarlar"
-                    on_release:
-                        app.root.ids.nav_drawer.set_state("close")
-                    IconLeftWidget:
-                        icon: "cog"
-                OneLineIconListItem:
                     text: "Çıkış Yap"
-                    on_release:
-                        app.root.ids.screen_manager.current = 'login_screen'
-                        app.root.ids.nav_drawer.set_state("close")
+                    on_release: app.logout()
                     IconLeftWidget:
                         icon: "logout"
-""")
+''')
 
         sm = main_layout.ids.screen_manager
 
@@ -167,9 +124,35 @@ MDNavigationLayout:
         sm.add_widget(RaporEkrani(name='rapor_ekrani_screen'))
         sm.add_widget(ProfileEkrani(name='profile_screen'))
         sm.add_widget(TestSecimEkrani(name='test_secim'))
-        sm.add_widget(OgrenciYonetimEkrani(name='ogrenciEkleSec_screen'))
+        sm.add_widget(OgrenciYonetimEkrani(name='ogrenciEkleSec'))
 
         # Başlangıç ekranını ayarla
         sm.current = 'login_screen'
 
         return main_layout
+
+    def switch_screen(self, screen_name):
+        """Belirtilen ekrana geçiş yapar ve navigasyon menüsünü kapatır."""
+        self.root.ids.screen_manager.current = screen_name
+        self.root.ids.nav_drawer.set_state("close")
+
+    def logout(self):
+        """Kullanıcı çıkış işlemini gerçekleştirir."""
+        self.user_role = ''
+        self.logged_in_user = ''
+        login_screen = self.root.ids.screen_manager.get_screen('login_screen')
+        clear_text_inputs(login_screen, ['login', 'password'])
+        self.switch_screen('login_screen')
+
+
+    def login_successful(self, user_info):
+        """
+        Giriş başarılı olduğunda çağrılır.
+        Kullanıcı verilerini saklar.
+        """
+        self.user_data = {
+            "name": user_info.get("name"),
+            "surname": user_info.get("surname"),
+            "email": user_info.get("email"),
+            "user_role": user_info.get("user_role")
+        }
