@@ -1,4 +1,4 @@
-from kivy.uix.screenmanager import Screen
+from algomind.screens.baseScreen import BaseScreen
 from kivy.properties import ObjectProperty, StringProperty, ListProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivymd.app import MDApp  # MDApp'e erişim için import ettik.
@@ -6,13 +6,27 @@ from kivymd.app import MDApp  # MDApp'e erişim için import ettik.
 
 # KV dosyasındaki StudentCard'ın Python tarafındaki tanımını yapıyoruz.
 class StudentCard(BoxLayout):
+    """
+    Öğrenci bilgilerini gösteren bir kart widget'ı.
+
+    Attributes:
+        student_id (StringProperty): Öğrencinin ID'si.
+        student_name (StringProperty): Öğrencinin adı.
+        avatar_source (StringProperty): Öğrencinin profil resmi dosya yolu.
+    """
     student_id = StringProperty('')
     student_name = StringProperty('')
     avatar_source = StringProperty('algomind/assets/profile.png')
 
 
 # OgrenciYonetimEkrani artık MDScreen'den türemeli.
-class OgrenciYonetimEkrani(Screen):
+class OgrenciYonetimEkrani(BaseScreen):
+    """
+    Öğrenci yönetimi ekranı.
+
+    Bu ekran, mevcut öğrencileri listelemeye, yeni öğrenci eklemeye ve
+    öğrenciler arasında arama yapmaya olanak tanır.
+    """
     # .kv dosyasındaki yeni id'lere karşılık gelen property'ler
     student_list_grid = ObjectProperty(None)
     ad_input = ObjectProperty(None)
@@ -29,11 +43,18 @@ class OgrenciYonetimEkrani(Screen):
         super().__init__(**kwargs)
 
     def on_enter(self, *args):
+        """
+        Ekran görüntülendiğinde çağrılır.
+
+        Verilerin tekrar tekrar yüklenmesini önlemek için, verileri yalnızca
+        ilk girişte yükler.
+        """
         if not self._data_loaded:
             self.load_initial_data()
             self._data_loaded = True
 
     def load_initial_data(self):
+        """Başlangıç öğrenci verilerini yükler ve listeyi doldurur."""
         self.all_students_data = [
             {'id': '0040 101', 'name': 'Yred Mağe', 'avatar': 'algomind/assets/profile.png'},
             {'id': '0040 224', 'name': 'Öpla Uim', 'avatar': 'algomind/assets/profile.png'},
@@ -45,6 +66,12 @@ class OgrenciYonetimEkrani(Screen):
         self.populate_student_list(self.all_students_data)
 
     def populate_student_list(self, student_list):
+        """
+        Öğrenci listesini verilen verilerle doldurur.
+
+        Args:
+            student_list (list): Öğrenci bilgilerini içeren sözlüklerin listesi.
+        """
         grid = self.ids.student_list_grid
         grid.clear_widgets()
 
@@ -57,6 +84,12 @@ class OgrenciYonetimEkrani(Screen):
             grid.add_widget(card)
 
     def add_student(self):
+        """
+        Formdan alınan bilgilerle yeni bir öğrenci ekler.
+
+        Form alanlarını okur, yeni öğrenci bilgilerini konsola yazdırır,
+        formu temizler ve öğrenci listesini günceller.
+        """
         adi = self.ids.ad_input.text
         soyadi = self.ids.soyad_input.text
         yas = self.ids.yas_input.text
@@ -102,12 +135,18 @@ class OgrenciYonetimEkrani(Screen):
 
     # Bu metot, menü butonuna basıldığında çağrılır.
     def toggle_navigation_drawer(self):
-        """Navigation drawer'ı açıp kapatır."""
+        """Gezinme menüsünü (navigation drawer) açıp kapatır."""
         app = MDApp.get_running_app()
         nav_drawer = app.root.ids.nav_drawer
         nav_drawer.set_state("open" if nav_drawer.state == "close" else "close")
 
     def search_students(self, search_text):
+        """
+        Öğrencileri adlarına veya ID'lerine göre arar.
+
+        Args:
+            search_text (str): Arama metni.
+        """
         search_text = search_text.lower()
         if not search_text:
             self.populate_student_list(self.all_students_data)
@@ -117,4 +156,3 @@ class OgrenciYonetimEkrani(Screen):
             if search_text in student['name'].lower() or search_text in student['id']
         ]
         self.populate_student_list(filtered_list)
-
