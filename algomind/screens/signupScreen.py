@@ -1,4 +1,3 @@
-
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
 from algomind.helpers import show_popup, clear_text_inputs

@@ -1,7 +1,7 @@
 import requests
 import os
 
-API_BASE_URL = "http://35.202.188.175:8080"  # VM IP adresin
+API_BASE_URL = "http://35.202.188.175:8080/"  # VM IP adresin
 TOKEN_FILE = "auth_token.txt"
 
 class AuthService:
