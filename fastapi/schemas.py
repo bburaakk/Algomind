@@ -1,11 +1,19 @@
 # backend/schemas.py
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 class UserCreate(BaseModel):
-    email: str
+    username: str
+    email: EmailStr
     password: str
+    role: str  # 'öğretmen' veya 'veli'
+    first_name: str
+    last_name: str
 
 class UserLogin(BaseModel):
-    email: str
+    username: str  # email yerine username
     password: str
+
+class Token(BaseModel):
+    access_token: str
+
