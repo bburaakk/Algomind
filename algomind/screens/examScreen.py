@@ -1,6 +1,7 @@
 from algomind.screens.baseScreen import BaseScreen
 from kivy.properties import NumericProperty, StringProperty
 from kivy.clock import Clock
+from kivymd.app import MDApp
 
 
 class TestScreen(BaseScreen):
@@ -24,6 +25,8 @@ class TestScreen(BaseScreen):
 
         Zamanlayıcıyı başlatan bir saat (clock) olayını zamanlar.
         """
+        app = MDApp.get_running_app()
+        self.student_name = app.selected_student_name
         Clock.schedule_interval(self.update_timer, 1)
 
     def on_leave(self, *args):

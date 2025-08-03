@@ -100,30 +100,6 @@
             size_hint_x: None
             width: self.texture_size[0]
 
-
-<SecondaryBottomButton@Button>:
-    background_color: (0,0,0,0)
-    background_normal: ''
-    background_down: ''
-    size_hint_y: None
-    height: dp(55)
-    canvas.before:
-        Color:
-            rgba: (1,1,1,1) if self.state == 'normal' else get_color_from_hex('#F0F4F8')
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: [dp(12)]
-    BoxLayout:
-        pos: root.pos
-        size: root.size
-        padding: dp(15)
-        Label:
-            text: 'Test Sayfasına Geçiş'
-            font_name: 'algomind/assets/GochiHand-Regular.ttf'
-            color: get_color_from_hex('#52616B')
-            font_size: '18sp'
-
 <FormSectionHeader@Label>:
     font_name: 'algomind/assets/GochiHand-Regular.ttf'
     font_size: '20sp'
@@ -278,8 +254,6 @@
                             disabled: True if app.user_role == 'veli' else False
                             height: 0 if app.user_role == 'veli' else dp(55)
                             size_hint_y: 0 if app.user_role == 'veli' else None
-                        SecondaryBottomButton:
-                            on_release: root.go_to_test_secim()
 
             Screen:
                 name: 'ekle_view'
