@@ -9,6 +9,7 @@ Gemini tarafından oluşturulan öğrenci gelişim raporlarını gösterir.
 from kivymd.uix.screen import MDScreen
 from kivy.properties import StringProperty
 from kivy.clock import Clock
+from kivymd.app import MDApp
 
 class RaporEkrani(MDScreen):
     """
@@ -32,10 +33,10 @@ class RaporEkrani(MDScreen):
         """
         Gemini'den raporu alır (simüle eder) ve ekrandaki etiketleri günceller.
         """
+        app = MDApp.get_running_app()
         # TODO: Bu kısım, gerçek Gemini API çağrısı ile değiştirilecek.
         # Şimdilik, tasarımın nasıl görüneceğini test etmek için sahte veri kullanıyoruz.
         mock_gemini_report = {
-            "student_name": "Ayşe Yılmaz",
             "strengths": (
                 "- **Görsel Hafıza:** Resimli kart eşleştirme testlerinde %95 başarı.\\n"
                 "- **Desen Tanıma:** Şekil tamamlama görevlerinde hızlı ve doğru yanıtlar veriyor.\\n"
@@ -56,7 +57,7 @@ class RaporEkrani(MDScreen):
 
         # .kv dosyasındaki ilgili widget'ların ID'lerini kullanarak metinleri güncelliyoruz.
         if self.ids:
-            self.ids.student_name_label.text = mock_gemini_report.get("student_name", "Öğrenci Bulunamadı")
+            self.ids.student_name_label.text = getattr(app, 'selected_student_name', 'Öğrenci Bulunamadı')
             self.ids.strengths_label.text = mock_gemini_report.get("strengths", "Veri yok.")
             self.ids.development_areas_label.text = mock_gemini_report.get("development_areas", "Veri yok.")
             self.ids.recommendations_label.text = mock_gemini_report.get("recommendations", "Veri yok.")

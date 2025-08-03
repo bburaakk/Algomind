@@ -5,12 +5,18 @@ from kivy.uix.boxlayout import BoxLayout
 from kivymd.app import MDApp
 from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
+from kivy.uix.behaviors import ButtonBehavior
 
 
-class StudentCard(BoxLayout):
+class StudentCard(ButtonBehavior, BoxLayout):
     student_id = StringProperty('')
     student_name = StringProperty('')
     avatar_source = StringProperty('algomind/assets/profile.png')
+
+    def on_release(self):
+        app = MDApp.get_running_app()
+        app.selected_student_name = self.student_name
+        app.root.ids.screen_manager.current = 'test_secim'
 
 class OgrenciYonetimEkrani(BaseScreen):
     student_list_grid = ObjectProperty(None)
@@ -133,9 +139,6 @@ class OgrenciYonetimEkrani(BaseScreen):
             if search_text in student['name'].lower()
         ]
         self.populate_student_list(filtered_list)
-
-    def go_to_test_secim(self):
-        self.manager.current = 'test_secim'
 
     def toggle_navigation_drawer(self):
         app = MDApp.get_running_app()
