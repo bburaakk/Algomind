@@ -1,6 +1,12 @@
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
+import requests
+import json
+
+# !!! GÜVENLİK UYARISI: API anahtarını doğrudan koda eklemek güvenli değildir.
+# Bu anahtarı daha güvenli bir yöntemle (örn: ortam değişkeni, config dosyası) saklamanız önerilir.
+API_KEY = "AIzaSyBt1K9cJPpjsIgYO-B5vLzCL6mpn821nHc"  # Kendi Gemini API anahtarınızı buraya yapıştırın
 
 
 def show_popup(title, message):
@@ -31,3 +37,121 @@ def clear_text_inputs(screen, fields):
             widget = screen.ids[field_id]
             if isinstance(widget, TextInput):
                 widget.text = ""
+
+
+def generate_test_questions(test_type):
+    """
+    Gemini API kullanarak belirtilen türde test soruları oluşturur.
+
+    Args:
+        test_type (str): 'math' veya 'color' gibi test türü.
+
+    Returns:
+        list: Soru ve cevapları içeren bir liste veya hata durumunda None.
+    """
+    if test_type == 'math':
+        prompt = """
+        Bana 10 adet matematik sorusu oluştur. Sorular ilkokul seviyesinde olmalı ve toplama, çıkarma, çarpma ve bölme işlemlerini içermeli. Her soru için 2 seçenek ver. JSON formatında yanıt ver.
+        Örnek:
+        [
+            {"question": "25 + 23 = ?", "correct_answer": "48", "options": ["48", "47"]},
+            {"question": "12 - 4 = ?", "correct_answer": "8", "options": ["8", "9"]}
+        ]
+        - Toplama/çıkarma: 1-5000 arası sayılar.
+        - Çarpma/bölme: 1-99 arası sayılar, sonuçlar tam sayı olmalı.
+        - Her soruda 2 farklı seçenek olmalı ve doğru cevap seçenekler arasında bulunmalı.
+        """
+    elif test_type == 'color':
+        prompt = """
+        Bana 10 adet renk tanıma testi sorusu oluştur. Her soru için bir renk adı (Türkçe) ve iki seçenek (biri doğru cevap, diğeri yanlış bir renk adı) ver. Yanıt, her biri bir soru nesnesi olan 10 öğeden oluşan bir JSON dizisi olmalıdır. Başka hiçbir metin veya açıklama ekleme. Renk adlarını Türkçe ve küçük harfle yaz.
+         **ÖNEMLİ KISITLAMA:** Kullanacağın tüm renk adları (hem doğru cevap hem de seçeneklerdeki) SADECE aşağıdaki listeden olmalıdır: "kırmızı", "mavi", "yeşil", "sarı", "mor", "turuncu", "siyah", "beyaz", "pembe", "kahverengi", "gri". Bu listenin dışında hiçbir renk adı kullanma.
+
+         Örnek JSON Dizisi:
+        [
+            {"question": "kırmızı", "correct_answer": "kırmızı", "options": ["kırmızı", "mavi"]},
+            {"question": "yeşil", "correct_answer": "yeşil", "options": ["mor", "yeşil"]}
+        ]
+        Yanlış seçenekler her zaman farklı ve doğru cevaptan belirgin şekilde ayrı olsun. Sadece Türkçe renk adlarını kullan.
+        """
+    else:
+        return None
+
+    chatHistory = [{"role": "user", "parts": [{"text": prompt}]}]
+    payload = {"contents": chatHistory, "generationConfig": {"responseMimeType": "application/json"}}
+    apiUrl = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+
+    try:
+        response = requests.post(apiUrl, headers={'Content-Type': 'application/json'}, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        json_string = result['candidates'][0]['content']['parts'][0]['text']
+        
+        if json_string.startswith("```json") and json_string.endswith("```"):
+            json_string = json_string[7:-3].strip()
+            
+        questions = json.loads(json_string)
+        
+        if isinstance(questions, list) and all(isinstance(q, dict) for q in questions):
+            print(f"API'den {test_type} soruları başarıyla çekildi.")
+            return questions
+        else:
+            print(f"API'den beklenen formatta ({test_type}) yanıt alınamadı.")
+            return None
+            
+    except requests.exceptions.RequestException as e:
+        print(f"API isteği sırasında bir ağ hatası oluştu: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"API yanıtı JSON olarak ayrıştırılamadı: {e}")
+        return None
+    except Exception as e:
+        print(f"Genel bir hata oluştu: {e}")
+        return None
+
+
+def generate_report_comment(report_data):
+    """
+    Gemini API kullanarak test sonuçları için bir uzman yorumu oluşturur.
+
+    Args:
+        report_data (dict): Rapor verilerini içeren sözlük.
+
+    Returns:
+        str: Oluşturulan yorum veya hata durumunda bir hata mesajı.
+    """
+    prompts = {
+        "Hayvan Tanıma Testi": "Bu hayvan tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, hayvanlar hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
+        "Besin Tanıma Testi": "Bu besin tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, besinler hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
+        "Nesne Tanıma Testi": "Bu nesne tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, nesneler hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
+        "Meyve Sebze Tanıma Testi": "Bu meyve-sebze tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, sağlıklı beslenme farkındalığını ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
+        "Renk Tanıma Testi": "Bu renk tanıma testi sonuçlarına göre öğrencinin renkleri tanıma becerisini, görsel algısını ve dikkat süresini analiz et, gelişim alanlarını belirt ve önerilerde bulun.",
+        "Matematik Testi": "Bu matematik testi sonuçlarına göre öğrencinin temel işlem becerilerini, problem çözme yeteneğini ve dikkat süresini analiz et, güçlü ve zayıf yönlerini belirt ve gelişim için önerilerde bulun."
+    }
+
+    base_prompt = f"""
+    Aşağıdaki öğrenci test sonuçlarına göre detaylı bir rapor ve yorum oluştur:
+    Öğrenci Adı: {report_data.get('ogrenci_adi', 'Bilinmiyor')}
+    Konu: {report_data.get('konu', 'Bilinmiyor')}
+    Toplam Soru: {report_data.get('toplam_soru', 0)}
+    Doğru Cevap: {report_data.get('dogru_cevap', 0)}
+    Yanlış Cevap: {report_data.get('yanlis_cevap', 0)}
+    Boş Cevap: {report_data.get('bos_cevap', 0)}
+    Başarı Yüzdesi: %{report_data.get('yuzde', 0.0)}
+    Test Süresi: {report_data.get('sure', 0)} saniye
+
+    Yorum İsteği: {prompts.get(report_data.get('konu'), "Lütfen öğrencinin performansını değerlendir.")}
+    Motivasyonunu artıracak pozitif bir dil kullan.
+    """
+
+    try:
+        chatHistory = [{"role": "user", "parts": [{"text": base_prompt}]}]
+        payload = {"contents": chatHistory}
+        apiUrl = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+        response = requests.post(apiUrl, headers={'Content-Type': 'application/json'}, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        gemini_comment = result['candidates'][0]['content']['parts'][0]['text']
+        return gemini_comment
+    except Exception as e:
+        print(f"Gemini API hatası: {e}")
+        return "Rapor yorumu alınırken bir hata oluştu."

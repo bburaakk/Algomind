@@ -16,6 +16,8 @@ class MainApp(MDApp):
     title = "Algomind"
     logged_in_user = StringProperty('')
     user_role = StringProperty('')
+    current_test_type = StringProperty('')
+    last_test_result = {}
 
     def build(self):
         self.theme_cls.primary_palette = "Blue"
@@ -105,6 +107,14 @@ MDNavigationLayout:
 
         sm.current = 'login_screen'
         return main_layout
+
+    def start_test(self, test_type):
+        """
+        Seçilen teste göre test ekranını başlatır.
+        Bu fonksiyon, TestSecimEkrani'ndaki butonlar tarafından çağrılır.
+        """
+        self.current_test_type = test_type
+        self.switch_screen('test_screen')
 
     def create_user(self, email, password, role, username, first_name, last_name):
         """
