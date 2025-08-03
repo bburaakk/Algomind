@@ -1,0 +1,98 @@
+#:kivy 2.1.0
+#:import Window kivy.core.window.Window
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+
+<WobblyButton@Button>:
+    font_name: 'algomind/assets/GochiHand-Regular.ttf'
+    font_size: '22sp'
+    color: (1, 1, 1, 1)
+    size_hint: (0.45, None)
+    height: dp(60)
+    background_normal: ''
+    background_down: ''
+    # Yeni renk paleti: Canlı turuncu tonları
+    background_color: get_color_from_hex('#E17055') if self.state == 'normal' else get_color_from_hex('#D35400')
+
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 0.2)
+        RoundedRectangle:
+            pos: (self.x - dp(2), self.y - dp(2))
+            size: (self.width + dp(4), self.height + dp(4))
+            radius: [dp(17)]
+    canvas.after:
+        Color:
+            rgba: (1, 1, 1, 0.7)
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+            width: 1.5
+
+<WobblyLabel@Label>:
+    font_name: 'algomind/assets/GochiHand-Regular.ttf'
+    font_size: '22sp'
+    color: (1, 1, 1, 1)
+    size_hint: (1, None)
+    height: dp(60)
+    halign: 'center'
+    valign: 'middle'
+
+    canvas.before:
+        Color:
+            # Butonlarla uyumlu etiket rengi
+            rgba: get_color_from_hex('#E17055')
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(15)]
+    canvas.after:
+        Color:
+            rgba: (1, 1, 1, 0.7)
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+            width: 1.5
+
+<TestScreen>:
+    name: 'test_screen'
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex('#2D3436')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(15)
+
+        # Üst bar
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(70)
+            spacing: dp(15)
+            WobblyLabel:
+                text: root.student_name
+            WobblyLabel:
+                text: root.formatted_time
+
+        # Test içeriği ve butonlar için ana alan
+        BoxLayout:
+            id: main_content_container
+            orientation: 'vertical'
+            spacing: dp(20)
+            padding: dp(10)
+
+            # Resim için ayrılmış alan
+            BoxLayout:
+                id: image_area
+                size_hint_y: 0.6 # Dikeyde %60 yer kapla
+                padding: dp(10)
+
+            # Seçenekler için ayrılmış alan
+            BoxLayout:
+                id: options_area
+                orientation: 'vertical'
+                size_hint_y: 0.4 # Dikeyde %40 yer kapla
+                spacing: dp(10)
+                padding: dp(10)
