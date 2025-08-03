@@ -1,0 +1,106 @@
+<ModernButton>:
+    background_color: 0, 0, 0, 0
+    color: 1, 1, 1, 1
+    font_size: '18sp'
+    markup: True
+
+<StoryReader>:
+    canvas.before:
+        Color:
+            rgba: 0.95, 0.97, 1, 1
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 30
+        spacing: 20
+
+        BoxLayout:
+            size_hint_y: 0.15
+            canvas.before:
+                Color:
+                    rgba: 53/255, 122/255, 189/255, 1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [20, 20, 0, 0]
+            Label:
+                text: '[b]Masal Okuyucu[/b]'
+                markup: True
+                font_size: '28sp'
+                color: 1, 1, 1, 1
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 15
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [0, 0, 20, 20]
+
+            BoxLayout:
+                size_hint_y: 0.13
+                spacing: 10
+                padding: [0, 10, 0, 0]
+                Label:
+                    size_hint_x: 0.15
+                TextInput:
+                    id: topic_input
+                    hint_text: 'Konu girin (örn: Orman, Uzay, Arkadaşlık...)'
+                    font_size: '17sp'
+                    size_hint_x: 0.7
+                    halign: 'center'
+                    multiline: False
+                    background_normal: ''
+                    background_active: ''
+                    background_color: 0.97, 0.97, 1, 1
+                    foreground_color: 0.1, 0.1, 0.1, 1
+                    padding:[0,10,0,10]
+                    cursor_color: 53/255, 122/255, 189/255, 1
+                    cursor_width: 2
+                    on_focus: root._on_focus(self, self.focus)
+                Label:
+                    size_hint_x: 0.15
+
+            Label:
+                id: story_title_label
+                text: ''
+                markup: True
+                font_size: '22sp'
+                color: 0, 0, 0, 1
+                size_hint_y: 0.1
+                halign: 'center'
+                valign: 'middle'
+
+            ScrollView:
+                id: scroll
+                size_hint_y: 0.6
+                bar_color: 53/255, 122/255, 189/255, 1
+                bar_inactive_color: 0.8, 0.8, 0.8, 1
+
+                Label:
+                    id: story_label
+                    text: '[i]Bir konu girin ve hikaye oluşturun...[/i]'
+                    markup: True
+                    font_size: '18sp'
+                    color: 0.1, 0.1, 0.1, 1
+                    halign: 'left'
+                    valign: 'top'
+                    size_hint_y: None
+                    text_size: self.width, None
+                    on_texture_size: root._update_label_height()
+
+            BoxLayout:
+                size_hint_y: 0.15
+                spacing: 10
+                ModernButton:
+                    id: gen_btn
+                    text: '[b]📖 Masal Oluştur[/b]'
+                    on_press: root.generate_story(self)
+                ModernButton:
+                    id: play_btn
+                    text: '[b]🔁 Yeniden Dinle[/b]'
+                    disabled: True
+                    on_press: root.replay_audio(self)
