@@ -55,7 +55,6 @@
     name: 'test_screen'
     canvas.before:
         Color:
-            # Koyu ve sıcak bir arka plan
             rgba: get_color_from_hex('#2D3436')
         Rectangle:
             pos: self.pos
@@ -77,14 +76,23 @@
             WobblyLabel:
                 text: root.formatted_time
 
-        # Test içeriği için kaydırılabilir alan
-        ScrollView:
-            do_scroll_x: False
-            do_scroll_y: True
+        # Test içeriği ve butonlar için ana alan
+        BoxLayout:
+            id: main_content_container
+            orientation: 'vertical'
+            spacing: dp(20)
+            padding: dp(10)
+
+            # Resim için ayrılmış alan
             BoxLayout:
-                id: test_content_area
-                orientation: 'vertical'
+                id: image_area
+                size_hint_y: 0.6 # Dikeyde %60 yer kapla
                 padding: dp(10)
+
+            # Seçenekler için ayrılmış alan
+            BoxLayout:
+                id: options_area
+                orientation: 'vertical'
+                size_hint_y: 0.4 # Dikeyde %40 yer kapla
                 spacing: dp(10)
-                size_hint_y: None
-                height: self.minimum_height
+                padding: dp(10)

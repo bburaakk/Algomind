@@ -10,8 +10,9 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.spinner import MDSpinner
 import threading
 import random
+import os
 from algomind.helpers import generate_test_questions, show_popup
-from algomind.data.test_data import ANIMAL_DATA, FOOD_DATA, OBJECT_DATA, MEYVE_SEBZE_DATA, COLOR_IMAGE_MAP
+from algomind.data.test_data import ANIMAL_DATA, FOOD_DATA, OBJECT_DATA, COLOR_DATA
 
 
 class TestScreen(BaseScreen):
@@ -56,14 +57,29 @@ class TestScreen(BaseScreen):
         self.correct_answers = 0
         self.incorrect_answers = 0
         self.is_loading = False
-        if self.ids.test_content_area:
-            self.ids.test_content_area.clear_widgets()
+
+        # KV dosyasındaki yeni widget'ları temizle
+        # self.ids.test_content_area yerine yeni ID'leri kullanın
+        if self.ids.get('image_area'):  # Widget var mı diye kontrol etmek daha güvenli bir yöntemdir
+            self.ids.image_area.clear_widgets()
+        if self.ids.get('options_area'):
+            self.ids.options_area.clear_widgets()
 
     def setup_test(self):
         """Seçilen test türüne göre soruları hazırlar."""
-        self.ids.test_content_area.clear_widgets()
+        # Eski test_content_area yerine yeni widget'ları temizle
+        if self.ids.get('image_area'):
+            self.ids.image_area.clear_widgets()
+        if self.ids.get('options_area'):
+            self.ids.options_area.clear_widgets()
+
         spinner = MDSpinner(size_hint=(None, None), size=(dp(46), dp(46)), pos_hint={'center_x': .5, 'center_y': .5})
-        self.ids.test_content_area.add_widget(spinner)
+
+        # Spinner'ı, görselin geleceği alana ekleyelim.
+        # Burada dikkatli olmalısınız. Spinner'ı ana alana değil, görselin geleceği alana eklemek mantıklıdır.
+        if self.ids.get('image_area'):
+            self.ids.image_area.add_widget(spinner)
+
         self.is_loading = True
 
         # Soruları arkaplanda yükle
@@ -73,10 +89,10 @@ class TestScreen(BaseScreen):
         """Soruları arkaplan thread'inde yükler ve ana thread'de UI'ı günceller."""
         test_map = {
             'animal': ("Hayvan Tanıma Testi", ANIMAL_DATA, "hayvanlar_images"),
-            'food': ("Besin Tanıma Testi", FOOD_DATA, "food_images"),
+            'synonymAntonym': ("Eş ve Zıt Anlamlılar Testi", None, None),
             'object': ("Nesne Tanıma Testi", OBJECT_DATA, "objects_images"),
-            'fruit_vegetable': ("Meyve Sebze Tanıma Testi", MEYVE_SEBZE_DATA, "meyve_sebze_images"),
-            'color': ("Renk Tanıma Testi", None, None),
+            'food': ("Yiyecekler Tanıma Testi", FOOD_DATA, "foods_images"),
+            'color': ("Renk Tanıma Testi", COLOR_DATA, "color_images"),
             'math': ("Matematik Testi", None, None)
         }
 
@@ -87,25 +103,30 @@ class TestScreen(BaseScreen):
         self.test_konu, data_dict, image_folder = test_map[self.test_type]
 
         questions = []
-        if self.test_type in ['math', 'color']:
+        if self.test_type in ['math', 'synonymAntonym']:
             questions = generate_test_questions(self.test_type)
         else:
-            # Resimli testler için yerel soru oluşturma
+            # Resimli testler (animal, food, object, color) için yerel soru oluşturma
             items = list(data_dict.keys())
             random.shuffle(items)
             for i in range(min(10, len(items))):
-                correct_item = items[i]
-                # Resim yolu projenizin yapısına göre ayarlanmalı
-                image_path = f"algomind/assets/{image_folder}/{random.choice(data_dict[correct_item])}"
+                 correct_item = items[i]
 
-                wrong_items = [item for item in items if item != correct_item]
-                options = [correct_item, random.choice(wrong_items)]
-                random.shuffle(options)
-                questions.append({
-                    "image_path": image_path,
-                    "correct_answer": correct_item,
-                    "options": options
-                })
+
+                 base_path = os.path.dirname(os.path.abspath(__file__))
+                 algomind_folder_path = os.path.dirname(base_path)
+                 image_path = os.path.join(algomind_folder_path, "assets", image_folder, random.choice(data_dict[correct_item]))
+
+                 print(f"Yeni oluşturulan resim yolu: {image_path}")
+
+                 wrong_items = [item for item in items if item != correct_item]
+                 options = [correct_item, random.choice(wrong_items)]
+                 random.shuffle(options)
+                 questions.append({
+                     "image_path": image_path,
+                     "correct_answer": correct_item,
+                     "options": options
+                 })
 
         if not questions:
             Clock.schedule_once(lambda dt: self._on_questions_loaded(None))
@@ -117,7 +138,12 @@ class TestScreen(BaseScreen):
     def _on_questions_loaded(self, questions):
         """Sorular yüklendiğinde çağrılır ve ilk soruyu gösterir."""
         self.is_loading = False
-        self.ids.test_content_area.clear_widgets()
+
+        # Eski test_content_area yerine yeni widget'ları temizle
+        if self.ids.get('image_area'):
+            self.ids.image_area.clear_widgets()
+        if self.ids.get('options_area'):
+            self.ids.options_area.clear_widgets()
 
         if not questions:
             show_popup("Hata", "Sorular yüklenirken bir hata oluştu.")
@@ -127,23 +153,36 @@ class TestScreen(BaseScreen):
 
         self.display_question()
 
+
+
     def display_question(self):
         """Mevcut soruyu ekranda gösterir."""
-        self.ids.test_content_area.clear_widgets()
+        # Eski widget'ları temizle
+        if self.ids.get('image_area'):
+            self.ids.image_area.clear_widgets()
+        if self.ids.get('options_area'):
+            self.ids.options_area.clear_widgets()
+
         question_data = self.test_questions[self.current_question_index]
         self.question_counter_text = f"Soru {self.current_question_index + 1}/{len(self.test_questions)}"
 
         # Test türüne göre arayüzü oluştur
-        if self.test_type in ['animal', 'food', 'object', 'fruit_vegetable']:
-            self.question_text = "Resimdeki nedir?"
-            image = Image(source=question_data['image_path'], size_hint_y=0.5, allow_stretch=True)
-            self.ids.test_content_area.add_widget(image)
-        elif self.test_type == 'color':
-            self.question_text = "Bu hangi renktir?"
-            color_name = question_data["question"].lower()
-            image_path = f"algomind/assets/{COLOR_IMAGE_MAP.get(color_name)}"
-            image = Image(source=image_path, size_hint_y=0.5, allow_stretch=True)
-            self.ids.test_content_area.add_widget(image)
+        if self.test_type in ['animal', 'food', 'object', 'color']:
+            # Soru metnini test türüne göre belirle
+            if self.test_type == 'color':
+                self.question_text = "Bu hangi renktir?"
+            else:
+                self.question_text = "Resimdeki nedir?"
+
+            image_path_from_question = question_data['image_path']
+
+            if os.path.exists(image_path_from_question):
+                image = Image(source=image_path_from_question, allow_stretch=True, keep_ratio=True)
+                self.ids.image_area.add_widget(image)
+            else:
+                placeholder = MDLabel(text="Görsel bulunamadı.", halign='center')
+                self.ids.image_area.add_widget(placeholder)
+
         elif self.test_type == 'math':
             self.question_text = 'Aşağıdaki işlemi çözünüz'
             question_label = MDLabel(
@@ -154,7 +193,24 @@ class TestScreen(BaseScreen):
                 size_hint_y=None,
                 height=dp(50)
             )
-            self.ids.test_content_area.add_widget(question_label)
+            # Soru etiketini image_area'ya ekle
+            if self.ids.get('image_area'):
+                self.ids.image_area.add_widget(question_label)
+
+        elif self.test_type == 'synonymAntonym':
+            # Eş/Zıt anlam testi için: kelime sorusu yazı olarak sor
+            self.question_text = 'Aşağıdaki kelimenin eş veya zıt anlamlısını seçiniz'
+            question_label = MDLabel(
+                text=question_data['question'],
+                halign='center',
+                theme_text_color='Primary',
+                font_style='H5',
+                size_hint_y=None,
+                height=dp(50)
+            )
+            #  question_label'ı `image_area`'ya ekle
+            if self.ids.get('image_area'):
+                self.ids.image_area.add_widget(question_label)
 
         # Seçenek butonlarını oluştur
         options_layout = MDBoxLayout(orientation='vertical', adaptive_height=True, spacing=dp(10))
@@ -167,7 +223,10 @@ class TestScreen(BaseScreen):
             )
             options_layout.add_widget(btn)
 
-        self.ids.test_content_area.add_widget(options_layout)
+        if self.ids.get('options_area'):
+            self.ids.options_area.add_widget(options_layout)
+
+
 
     def check_answer(self, selected_option):
         """Kullanıcının cevabını kontrol eder."""
@@ -178,10 +237,13 @@ class TestScreen(BaseScreen):
             self.incorrect_answers += 1
 
         # Butonları geçici olarak devre dışı bırak
-        for widget in self.ids.test_content_area.children:
-            if isinstance(widget, MDBoxLayout):
-                for button in widget.children:
-                    button.disabled = True
+        # Eski test_content_area yerine yeni options_area'yı kullanın
+        # Butonlar options_area'da olduğu için, oradaki çocuk widget'ları kontrol etmek yeterlidir.
+        if self.ids.get('options_area'):
+            for widget in self.ids.options_area.children:
+                # widget'ın bir buton olduğunu kontrol etmek daha güvenlidir.
+                if isinstance(widget, MDRaisedButton):
+                    widget.disabled = True
 
         # Bir sonraki soruya geç
         Clock.schedule_once(self.next_question, 1.0)
