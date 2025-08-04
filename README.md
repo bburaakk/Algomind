@@ -113,17 +113,21 @@ Bu proje, otizmli çocuklara özel olarak tasarlanmış etkileşimli bir eğitim
 ---
 
 
-### 2. Mobil Uygulama (Kivy)
-
-
-
 ## ✅ Veritabanı Şeması (PostgreSQL)
 
-<img width="1536" height="1024" alt="Draw an ER diagram b" src="https://github.com/user-attachments/assets/61e30b8c-8e56-417f-b629-74d0d5e41293" />
+<img width="1314" height="695" alt="postgres - public - students" src="https://github.com/user-attachments/assets/faf574a1-305d-4360-9b59-99cd17aa80a3" />
 
+---
+## 📦 Kurulum
 
+---
 ## 📄 Lisans
 
 Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.
+
+
+
+
+
 
 
