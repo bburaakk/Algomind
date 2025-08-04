@@ -1,12 +1,10 @@
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
+from algomind.data.api_config import API_KEY
 import requests
 import json
 
-# !!! GÜVENLİK UYARISI: API anahtarını doğrudan koda eklemek güvenli değildir.
-# Bu anahtarı daha güvenli bir yöntemle (örn: ortam değişkeni, config dosyası) saklamanız önerilir.
-API_KEY = "AIzaSyBt1K9cJPpjsIgYO-B5vLzCL6mpn821nHc"  # Kendi Gemini API anahtarınızı buraya yapıştırın
 
 
 def show_popup(title, message):
@@ -44,7 +42,7 @@ def generate_test_questions(test_type):
     Gemini API kullanarak belirtilen türde test soruları oluşturur.
 
     Args:
-        test_type (str): 'math' veya 'color' gibi test türü.
+        test_type (str): 'math' veya 'synonymAntonym' gibi test türü.
 
     Returns:
         list: Soru ve cevapları içeren bir liste veya hata durumunda None.
@@ -53,26 +51,22 @@ def generate_test_questions(test_type):
         prompt = """
         Bana 10 adet matematik sorusu oluştur. Sorular ilkokul seviyesinde olmalı ve toplama, çıkarma, çarpma ve bölme işlemlerini içermeli. Her soru için 2 seçenek ver. JSON formatında yanıt ver.
         Örnek:
-        [
+        [ 
             {"question": "25 + 23 = ?", "correct_answer": "48", "options": ["48", "47"]},
             {"question": "12 - 4 = ?", "correct_answer": "8", "options": ["8", "9"]}
         ]
-        - Toplama/çıkarma: 1-5000 arası sayılar.
-        - Çarpma/bölme: 1-99 arası sayılar, sonuçlar tam sayı olmalı.
+        - Toplama/çıkarma: 1-50 arası sayılar.
+        - Çarpma/bölme: 1-50 arası sayılar, sonuçlar tam sayı olmalı.
         - Her soruda 2 farklı seçenek olmalı ve doğru cevap seçenekler arasında bulunmalı.
         """
-    elif test_type == 'color':
+    elif test_type == 'synonymAntonym':
         prompt = """
-        Bana 10 adet renk tanıma testi sorusu oluştur. Her soru için bir renk adı (Türkçe) ve iki seçenek (biri doğru cevap, diğeri yanlış bir renk adı) ver. Yanıt, her biri bir soru nesnesi olan 10 öğeden oluşan bir JSON dizisi olmalıdır. Başka hiçbir metin veya açıklama ekleme. Renk adlarını Türkçe ve küçük harfle yaz.
-         **ÖNEMLİ KISITLAMA:** Kullanacağın tüm renk adları (hem doğru cevap hem de seçeneklerdeki) SADECE aşağıdaki listeden olmalıdır: "kırmızı", "mavi", "yeşil", "sarı", "mor", "turuncu", "siyah", "beyaz", "pembe", "kahverengi", "gri". Bu listenin dışında hiçbir renk adı kullanma.
-
-         Örnek JSON Dizisi:
-        [
-            {"question": "kırmızı", "correct_answer": "kırmızı", "options": ["kırmızı", "mavi"]},
-            {"question": "yeşil", "correct_answer": "yeşil", "options": ["mor", "yeşil"]}
-        ]
-        Yanlış seçenekler her zaman farklı ve doğru cevaptan belirgin şekilde ayrı olsun. Sadece Türkçe renk adlarını kullan.
-        """
+                Bana 10 adet eş ve zıt anlamlı kelime sorusu oluştur. Sorular ilkokul seviyesinde olmalı ve temel kelimelerden oluşmalı. Soruların yarısı eş anlamlı, yarısı zıt anlamlı olmalı. Her soru için bir kelime, onun eş veya zıt anlamlısını içeren iki seçenek ver. JSON formatında yanıt ver. Örnek:
+                [
+                    {"question": "'Sıcak' kelimesinin zıt anlamlısı nedir?", "correct_answer": "Soğuk", "options": ["Ilık", "Soğuk"]},
+                    {"question": "'Hürriyet' kelimesinin eş anlamlısı nedir?", "correct_answer": "Özgürlük", "options": ["Tutsaklık", "Özgürlük"]}
+                ]
+                """
     else:
         return None
 
@@ -121,9 +115,9 @@ def generate_report_comment(report_data):
     """
     prompts = {
         "Hayvan Tanıma Testi": "Bu hayvan tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, hayvanlar hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
-        "Besin Tanıma Testi": "Bu besin tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, besinler hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
+        "Eş ve Zıt Anlamlı Kelimeler Testi": "Bu  testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, besinler hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
         "Nesne Tanıma Testi": "Bu nesne tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, nesneler hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
-        "Meyve Sebze Tanıma Testi": "Bu meyve-sebze tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, sağlıklı beslenme farkındalığını ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
+        "Yiyecekler Testi": "Bu yiyecek tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, sağlıklı beslenme farkındalığını ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
         "Renk Tanıma Testi": "Bu renk tanıma testi sonuçlarına göre öğrencinin renkleri tanıma becerisini, görsel algısını ve dikkat süresini analiz et, gelişim alanlarını belirt ve önerilerde bulun.",
         "Matematik Testi": "Bu matematik testi sonuçlarına göre öğrencinin temel işlem becerilerini, problem çözme yeteneğini ve dikkat süresini analiz et, güçlü ve zayıf yönlerini belirt ve gelişim için önerilerde bulun."
     }
