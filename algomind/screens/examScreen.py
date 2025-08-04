@@ -15,7 +15,7 @@ from algomind.data.test_data import ANIMAL_DATA, FOOD_DATA, OBJECT_DATA, COLOR_D
 from kivy.lang import Builder
 from kivy.uix.modalview import ModalView
 
-Builder.load_file('algomind/screens/testscreen.kv')
+Builder.load_file('algomind/UI/screens/examScreen.kv')
 
 
 class TestScreen(BaseScreen):
