@@ -4,10 +4,9 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from database import Base
 
-
 class User(Base):
     __tablename__ = "users"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
@@ -16,13 +15,17 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String(20), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    
     __table_args__ = (
         CheckConstraint(role.in_(["öğretmen", "veli"]), name="check_valid_role"),
     )
+    
+    # Relationships
+    students = relationship("Student", back_populates="user", cascade="all, delete")
+
 class Student(Base):
     __tablename__ = "students"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
@@ -33,28 +36,36 @@ class Student(Base):
     communication_level = Column(Text)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    
+    __table_args__ = (
+        CheckConstraint("age BETWEEN 2 AND 20", name="check_age_range"),
+    )
+    
+    # Relationships
+    user = relationship("User", back_populates="students")
     tests = relationship("Test", back_populates="student", cascade="all, delete")
-    reports = relationship("Report", back_populates="student", cascade="all, delete")
-
+    results = relationship("Result", back_populates="student", cascade="all, delete")
 
 class Test(Base):
     __tablename__ = "tests"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     test_title = Column(String(255), nullable=False)
     student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
-
+    started_at = Column(DateTime)
+    finished_at = Column(DateTime)
+    
+    # Relationships
     student = relationship("Student", back_populates="tests")
-    reports = relationship("Report", back_populates="test", cascade="all, delete")
+    results = relationship("Result", back_populates="test", cascade="all, delete")
 
-   class Result(Base):
+class Result(Base):
     __tablename__ = "results"
-
+    
     id = Column(Integer, primary_key=True, index=True)
-    test_id = Column(Integer, ForeignKey("tests.id", ondelete="CASCADE"))
-    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"))
-    test_title = Column(String)
+    test_id = Column(Integer, ForeignKey("tests.id", ondelete="CASCADE"), nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    test_title = Column(String(255), nullable=False)
     ogrenci_adi = Column(Text)
     konu = Column(Text)
     dogru_cevap = Column(Integer)
@@ -63,10 +74,18 @@ class Test(Base):
     toplam_soru = Column(Integer)
     yuzde = Column(Float)
     sure = Column(Float)
+    
+    # Relationships
+    test = relationship("Test", back_populates="results")
+    student = relationship("Student", back_populates="results")
+    report = relationship("Report", back_populates="result", cascade="all, delete", uselist=False)
 
 class Report(Base):
     __tablename__ = "report"
-
+    
     id = Column(Integer, primary_key=True, index=True)
-    result_id = Column(Integer, ForeignKey("results.id", ondelete="CASCADE"))
-    rapor_metni = Column(Text)
+    result_id = Column(Integer, ForeignKey("results.id", ondelete="CASCADE"), nullable=False)
+    rapor_metni = Column(Text, nullable=False)
+    
+    # Relationships
+    result = relationship("Result", back_populates="report")
