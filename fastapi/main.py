@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from typing import List
 from sqlalchemy import func, desc
-from pydantic import BaseModel
 from google.cloud import texttospeech
 import tempfile
 from fastapi.responses import FileResponse
@@ -15,7 +14,6 @@ from dotenv import load_dotenv
 import os
 import google.generativeai as genai
 import json
-from schema import TextRequest, StoryRequest, TestGenerateRequest, CreateTestResultRequest
 
 # --- Load environment and configure Gemini ---
 load_dotenv()
@@ -49,7 +47,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 # --- AUTH ---
 @app.post("/signup")
@@ -134,6 +131,13 @@ def create_test(test: schema.TestCreate, db: Session = Depends(get_db)):
 def get_tests(db: Session = Depends(get_db)):
     return db.query(models.Test).all()
 
+@app.get("/tests/{test_id}", response_model=schema.TestOut)
+def get_test(test_id: int, db: Session = Depends(get_db)):
+    test = db.query(models.Test).filter(models.Test.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+    return test
+
 # --- RESULTS ---
 @app.get("/results/", response_model=List[schema.ResultOut])
 def get_all_results(db: Session = Depends(get_db)):
@@ -207,7 +211,7 @@ def student_detailed_results(student_id: int, db: Session = Depends(get_db)):
 
 # --- GOOGLE CLOUD TTS ---
 @app.post("/tts/")
-async def tts_endpoint(request: TextRequest):
+async def tts_endpoint(request: schema.TextRequest):
     try:
         client = texttospeech.TextToSpeechClient()
         synthesis_input = texttospeech.SynthesisInput(text=request.text)
@@ -247,12 +251,12 @@ def gemini_generate(prompt: str, response_mime_type: str = "text/plain") -> str:
         raise HTTPException(status_code=500, detail=f"Gemini API hatası: {e}")
 
 @app.post("/story/")
-def generate_story(request: StoryRequest):
+def generate_story(request: schema.StoryRequest):
     story = gemini_generate(request.prompt, response_mime_type="text/plain")
     return {"story": story}
 
 @app.post("/create_test")
-def create_test_endpoint(request: TestGenerateRequest = Body(...)):
+def create_test_endpoint(request: schema.TestGenerateRequest = Body(...)):
     if request.test_type == 'math':
         prompt = (
             "Bana 10 adet matematik sorusu oluştur. Sorular ilkokul seviyesinde olmalı ve toplama, çıkarma, çarpma ve bölme işlemlerini içermeli. "
@@ -331,7 +335,7 @@ Motivasyonunu artıracak pozitif bir dil kullan ve yapıcı öneriler sun.
         return "Rapor yorumu alınırken bir hata oluştu."
 
 @app.post("/create_test_result_and_report")
-def create_test_result_and_report(request: CreateTestResultRequest, db: Session = Depends(get_db)):
+def create_test_result_and_report(request: schema.CreateTestResultRequest, db: Session = Depends(get_db)):
     """
     Test sonucunu kaydeder ve Gemini ile rapor oluşturur
     """
@@ -376,4 +380,3 @@ def create_test_result_and_report(request: CreateTestResultRequest, db: Session 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Hata oluştu: {str(e)}")
-
