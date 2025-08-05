@@ -1,6 +1,5 @@
 from algomind.screens.baseScreen import BaseScreen
-from kivy.properties import NumericProperty, StringProperty, ListProperty, ObjectProperty, DictProperty
-from kivy.clock import Clock
+from kivy.properties import NumericProperty, StringProperty, ListProperty, ObjectProperty, Clock
 from kivy.metrics import dp
 from kivymd.app import MDApp
 from kivymd.uix.button import MDRaisedButton
@@ -10,7 +9,7 @@ from kivymd.uix.spinner import MDSpinner
 import threading
 import random
 import os
-from algomind.helpers import generate_test_questions, show_popup
+from algomind.helpers import generate_test_questions, show_popup, save_test_to_db
 from algomind.data.test_data import ANIMAL_DATA, FOOD_DATA, OBJECT_DATA, COLOR_DATA
 from kivy.lang import Builder
 from kivy.uix.modalview import ModalView
@@ -30,7 +29,7 @@ class TestScreen(BaseScreen):
     current_question_index = NumericProperty(0)
     correct_answers = NumericProperty(0)
     incorrect_answers = NumericProperty(0)
-    test_konu = StringProperty("")
+    test_title = StringProperty("")
     is_loading = ObjectProperty(False)
     spinner_view = ObjectProperty(None)
 
@@ -51,6 +50,7 @@ class TestScreen(BaseScreen):
         """Ekran görüntülendiğinde test ortamını hazırlar."""
         app = MDApp.get_running_app()
         self.student_name = getattr(app, 'selected_student_name', 'Bilinmiyor')
+        self.student_id = getattr(app, 'selected_student_id', None)
         self.test_type = app.current_test_type
 
         # Zamanlayıcıyı başlat
@@ -107,7 +107,7 @@ class TestScreen(BaseScreen):
             Clock.schedule_once(lambda dt: show_popup("Hata", "Geçersiz test türü seçildi."))
             return
 
-        self.test_konu, data_dict, image_folder = test_map[self.test_type]
+        self.test_title, data_dict, image_folder = test_map[self.test_type]
 
         questions = []
         if self.test_type in ['math', 'synonymAntonym']:
@@ -229,9 +229,16 @@ class TestScreen(BaseScreen):
         app = MDApp.get_running_app()
         total_questions = len(self.test_questions)
         percentage = (self.correct_answers / total_questions) * 100 if total_questions > 0 else 0
+
+        print(f"DEBUG: finish_test çağrıldı. Öğrenci ID: {self.student_id}, test_title: {self.test_title}")
+        if self.student_id:
+            print("DEBUG: save_test_to_db fonksiyonu çağrılıyor.")
+            save_test_to_db(self.student_id, self.test_title)
+            print("DEBUG: save_test_to_db fonksiyonu çağrıldı.")
+
         app.last_test_result = {
             "ogrenci_adi": self.student_name,
-            "konu": self.test_konu,
+            "konu": self.test_title,
             "dogru_cevap": self.correct_answers,
             "yanlis_cevap": self.incorrect_answers,
             "bos_cevap": total_questions - (self.correct_answers + self.incorrect_answers),

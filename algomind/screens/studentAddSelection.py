@@ -15,6 +15,7 @@ class StudentCard(ButtonBehavior, BoxLayout):
 
     def on_release(self):
         app = MDApp.get_running_app()
+        app.selected_student_id = self.student_id
         app.selected_student_name = self.student_name
         app.root.ids.screen_manager.current = 'test_secim'
 
