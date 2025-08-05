@@ -59,6 +59,19 @@ class StoryRequest(BaseModel):
 class TestGenerateRequest(BaseModel):
     test_type: str  # "math" veya "synonymAntonym"
 
+class CreateTestResultRequest(BaseModel):
+    test_id: int
+    student_id: int
+    test_title: str
+    ogrenci_adi: str
+    konu: str
+    dogru_cevap: int
+    yanlis_cevap: int
+    bos_cevap: int
+    toplam_soru: int
+    yuzde: float
+    sure: float
+
 # --- AUTH ---
 @app.post("/signup")
 def signup(user: schema.UserCreate, db: Session = Depends(get_db)):
@@ -142,26 +155,48 @@ def create_test(test: schema.TestCreate, db: Session = Depends(get_db)):
 def get_tests(db: Session = Depends(get_db)):
     return db.query(models.Test).all()
 
-# --- REPORTS ---
-@app.post("/reports/", response_model=schema.ReportOut)
-def create_report(report: schema.ReportCreate, db: Session = Depends(get_db)):
-    db_report = models.Report(**report.dict())
-    db.add(db_report)
-    db.commit()
-    db.refresh(db_report)
-    return db_report
+# --- RESULTS ---
+@app.get("/results/", response_model=List[schema.ResultOut])
+def get_all_results(db: Session = Depends(get_db)):
+    return db.query(models.Result).all()
 
+@app.get("/results/by-student/{student_id}", response_model=List[schema.ResultOut])
+def get_results_by_student(student_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Result).filter(models.Result.student_id == student_id).all()
+
+@app.get("/results/by-test/{test_id}", response_model=List[schema.ResultOut])
+def get_results_by_test(test_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Result).filter(models.Result.test_id == test_id).all()
+
+@app.get("/results/latest", response_model=schema.ResultOut)
+def get_latest_result(db: Session = Depends(get_db)):
+    latest = db.query(models.Result).order_by(desc(models.Result.id)).first()
+    if not latest:
+        raise HTTPException(status_code=404, detail="Hiç sonuç yok.")
+    return latest
+
+@app.get("/results/summary")
+def get_results_summary(db: Session = Depends(get_db)):
+    return {
+        "toplam_sonuc": db.query(func.count(models.Result.id)).scalar() or 0,
+        "ortalama_yuzde": round(db.query(func.avg(models.Result.yuzde)).scalar() or 0, 2),
+        "ortalama_sure_saniye": round(db.query(func.avg(models.Result.sure)).scalar() or 0, 2),
+        "toplam_dogru": db.query(func.sum(models.Result.dogru_cevap)).scalar() or 0,
+        "toplam_yanlis": db.query(func.sum(models.Result.yanlis_cevap)).scalar() or 0,
+        "toplam_bos": db.query(func.sum(models.Result.bos_cevap)).scalar() or 0,
+    }
+
+# --- REPORTS ---
 @app.get("/reports/", response_model=List[schema.ReportOut])
 def get_all_reports(db: Session = Depends(get_db)):
     return db.query(models.Report).all()
 
-@app.get("/reports/by-student/{student_id}", response_model=List[schema.ReportOut])
-def get_reports_by_student(student_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Report).filter(models.Report.student_id == student_id).all()
-
-@app.get("/reports/by-test/{test_id}", response_model=List[schema.ReportOut])
-def get_reports_by_test(test_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Report).filter(models.Report.test_id == test_id).all()
+@app.get("/reports/by-result/{result_id}", response_model=schema.ReportOut)
+def get_report_by_result(result_id: int, db: Session = Depends(get_db)):
+    report = db.query(models.Report).filter(models.Report.result_id == result_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Bu sonuç için rapor bulunamadı.")
+    return report
 
 @app.get("/reports/latest", response_model=schema.ReportOut)
 def get_latest_report(db: Session = Depends(get_db)):
@@ -170,25 +205,14 @@ def get_latest_report(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Hiç rapor yok.")
     return latest
 
-@app.get("/reports/summary")
-def get_report_summary(db: Session = Depends(get_db)):
-    return {
-        "toplam_rapor": db.query(func.count(models.Report.id)).scalar() or 0,
-        "ortalama_yuzde": round(db.query(func.avg(models.Report.yuzde)).scalar() or 0, 2),
-        "ortalama_sure_saniye": round(db.query(func.avg(models.Report.sure)).scalar() or 0, 2),
-        "toplam_dogru": db.query(func.sum(models.Report.dogru_cevap)).scalar() or 0,
-        "toplam_yanlis": db.query(func.sum(models.Report.yanlis_cevap)).scalar() or 0,
-        "toplam_bos": db.query(func.sum(models.Report.bos_cevap)).scalar() or 0,
-    }
-
-# --- ÖĞRENCİYE ÖZEL RAPORLAR ---
-@app.get("/students/{student_id}/reports-summary")
-def student_report_summary(student_id: int, db: Session = Depends(get_db)):
-    total_tests = db.query(func.count(models.Report.id)).filter(models.Report.student_id == student_id).scalar()
-    avg_score = db.query(func.avg(models.Report.yuzde)).filter(models.Report.student_id == student_id).scalar()
-    avg_time = db.query(func.avg(models.Report.sure)).filter(models.Report.student_id == student_id).scalar()
-    total_correct = db.query(func.sum(models.Report.dogru_cevap)).filter(models.Report.student_id == student_id).scalar()
-    total_wrong = db.query(func.sum(models.Report.yanlis_cevap)).filter(models.Report.student_id == student_id).scalar()
+# --- ÖĞRENCİYE ÖZEL SONUÇLAR ---
+@app.get("/students/{student_id}/results-summary")
+def student_results_summary(student_id: int, db: Session = Depends(get_db)):
+    total_tests = db.query(func.count(models.Result.id)).filter(models.Result.student_id == student_id).scalar()
+    avg_score = db.query(func.avg(models.Result.yuzde)).filter(models.Result.student_id == student_id).scalar()
+    avg_time = db.query(func.avg(models.Result.sure)).filter(models.Result.student_id == student_id).scalar()
+    total_correct = db.query(func.sum(models.Result.dogru_cevap)).filter(models.Result.student_id == student_id).scalar()
+    total_wrong = db.query(func.sum(models.Result.yanlis_cevap)).filter(models.Result.student_id == student_id).scalar()
     return {
         "ogrenci_id": student_id,
         "cozulen_test_sayisi": total_tests or 0,
@@ -198,9 +222,9 @@ def student_report_summary(student_id: int, db: Session = Depends(get_db)):
         "toplam_yanlis": total_wrong or 0
     }
 
-@app.get("/students/{student_id}/reports-detailed", response_model=List[schema.ReportOut])
-def student_detailed_reports(student_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Report).filter(models.Report.student_id == student_id).order_by(desc(models.Report.id)).all()
+@app.get("/students/{student_id}/results-detailed", response_model=List[schema.ResultOut])
+def student_detailed_results(student_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Result).filter(models.Result.student_id == student_id).order_by(desc(models.Result.id)).all()
 
 # --- GOOGLE CLOUD TTS ---
 @app.post("/tts/")
@@ -227,7 +251,7 @@ async def tts_endpoint(request: TextRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- GEMINI STORY & TEST ENDPOINTS (SAME MODEL) ---
+# --- GEMINI STORY & TEST ENDPOINTS ---
 
 def gemini_generate(prompt: str, response_mime_type: str = "text/plain") -> str:
     """
@@ -290,25 +314,16 @@ def create_test_endpoint(request: TestGenerateRequest = Body(...)):
         raise HTTPException(status_code=500, detail=f"JSON ayrıştırma hatası: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Genel hata: {e}")
-#-------------------------------- Gemini Report --------------------
 
-class CreateTestResultRequest(BaseModel):
-    test_id: int
-    student_id: int
-    test_title: str
-    ogrenci_adi: str
-    konu: str
-    dogru_cevap: int
-    yanlis_cevap: int
-    bos_cevap: int
-    toplam_soru: int
-    yuzde: float
-    sure: float
+# --- GEMINI REPORT GENERATION ---
 
 def generate_report_comment(report_data: dict) -> str:
+    """
+    Gemini ile öğrencinin test sonuçlarına göre rapor oluşturur
+    """
     prompts = {
         "Hayvan Tanıma Testi": "Bu hayvan tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, hayvanlar hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
-        "Eş ve Zıt Anlamlı Kelimeler Testi": "Bu  testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, besinler hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
+        "Eş ve Zıt Anlamlı Kelimeler Testi": "Bu eş ve zıt anlamlı kelimeler testi sonuçlarına göre öğrencinin kelime haznesini, kavrama becerisini, dil gelişimini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
         "Nesne Tanıma Testi": "Bu nesne tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, nesneler hakkındaki genel bilgi düzeyini ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
         "Yiyecekler Testi": "Bu yiyecek tanıma testi sonuçlarına göre öğrencinin görsel algı, tanıma becerilerini, sağlıklı beslenme farkındalığını ve dikkat süresini değerlendirip, gelişim alanları için öneriler sun.",
         "Renk Tanıma Testi": "Bu renk tanıma testi sonuçlarına göre öğrencinin renkleri tanıma becerisini, görsel algısını ve dikkat süresini analiz et, gelişim alanlarını belirt ve önerilerde bulun.",
@@ -327,7 +342,7 @@ Başarı Yüzdesi: %{report_data.get('yuzde', 0.0)}
 Test Süresi: {report_data.get('sure', 0)} saniye
 
 Yorum İsteği: {prompts.get(report_data.get('konu'), "Lütfen öğrencinin performansını değerlendir.")}
-Motivasyonunu artıracak pozitif bir dil kullan.
+Motivasyonunu artıracak pozitif bir dil kullan ve yapıcı öneriler sun.
 """
     try:
         response = gemini_model.generate_content(base_prompt)
@@ -338,6 +353,9 @@ Motivasyonunu artıracak pozitif bir dil kullan.
 
 @app.post("/create_test_result_and_report")
 def create_test_result_and_report(request: CreateTestResultRequest, db: Session = Depends(get_db)):
+    """
+    Test sonucunu kaydeder ve Gemini ile rapor oluşturur
+    """
     try:
         # 1. results tablosuna kayıt
         new_result = models.Result(
@@ -373,8 +391,9 @@ def create_test_result_and_report(request: CreateTestResultRequest, db: Session 
         return {
             "result_id": new_result.id,
             "report_id": new_report.id,
-            "rapor_metni": gemini_comment
+            "rapor_metni": gemini_comment,
+            "message": "Test sonucu ve rapor başarıyla kaydedildi."
         }
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Hata oluştu: {str(e)}")
