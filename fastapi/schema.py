@@ -46,23 +46,21 @@ class TestOut(TestBase):
 
 
 # ------------------ Report ------------------
-class ReportBase(BaseModel):
+class CreateTestResultRequest(BaseModel):
     test_id: int
     student_id: int
     test_title: str
-    ogrenci_adi: Optional[str] = None
-    konu: Optional[str] = None
-    dogru_cevap: Optional[int] = None
-    yanlis_cevap: Optional[int] = None
-    bos_cevap: Optional[int] = None
-    toplam_soru: Optional[int] = None
-    yuzde: Optional[float] = None
-    sure: Optional[float] = None
+    ogrenci_adi: str
+    konu: str
+    dogru_cevap: int
+    yanlis_cevap: int
+    bos_cevap: int
+    toplam_soru: int
+    yuzde: float
+    sure: float
 
-class ReportCreate(ReportBase):
-    pass
+class ReportOut(BaseModel):
+    result_id: int
+    rapor_metni: str
+  
 
-class ReportOut(ReportBase):
-    id: int
-    class Config:
-        from_attributes = True       
