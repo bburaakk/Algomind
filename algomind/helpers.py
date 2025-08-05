@@ -4,7 +4,12 @@ from kivy.uix.textinput import TextInput
 from algomind.data.api_config import API_KEY
 import requests
 import json
+import google.generativeai as genai
 
+
+genai.configure(api_key=API_KEY)
+
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 def show_popup(title, message):
@@ -72,7 +77,7 @@ def generate_test_questions(test_type):
 
     chatHistory = [{"role": "user", "parts": [{"text": prompt}]}]
     payload = {"contents": chatHistory, "generationConfig": {"responseMimeType": "application/json"}}
-    apiUrl = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+    apiUrl = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={API_KEY}"
 
     try:
         response = requests.post(apiUrl, headers={'Content-Type': 'application/json'}, json=payload, timeout=30)
@@ -140,7 +145,7 @@ def generate_report_comment(report_data):
     try:
         chatHistory = [{"role": "user", "parts": [{"text": base_prompt}]}]
         payload = {"contents": chatHistory}
-        apiUrl = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+        apiUrl = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={API_KEY}"
         response = requests.post(apiUrl, headers={'Content-Type': 'application/json'}, json=payload, timeout=30)
         response.raise_for_status()
         result = response.json()
@@ -149,3 +154,37 @@ def generate_report_comment(report_data):
     except Exception as e:
         print(f"Gemini API hatası: {e}")
         return "Rapor yorumu alınırken bir hata oluştu."
+
+
+def masal_uret(konu):
+    prompt = f"""
+    Lütfen sadece çocuklara yönelik, eğitici ve yaratıcı bir hikaye yaz. Hikayenin konusu: {konu}.
+
+    Hikayede başlık da olsun. Sadece hikaye içeriği ver, yorum ya da açıklama ekleme.
+
+    Örnek gibi:
+
+    Tavşan Pamuk ve Sincap Fındık(başlık)
+
+    Yeşil bir ormanda, Tavşan Pamuk yaşarmış...
+    
+    Başlığı yazdıktan sonra bir satır aşağıya geç
+    
+    ve maksimum 1000 karakterli olsun
+    
+    Format şöyle olsun:
+
+    **Başlık**
+
+    (Bir satır boşluk bırak)
+
+    Hikaye içeriği buraya gelsin...
+    
+    Hikayelerde Elif ismini kullanma
+    
+    Vızzz gibi ttsnin okuyamayacağı şeyler yazma
+
+    """
+
+    response = model.generate_content(prompt)
+    return response.text.strip()

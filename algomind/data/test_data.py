@@ -10,17 +10,17 @@ ANIMAL_DATA = {
 # Nesne listesi ve dosya adları
 OBJECT_DATA = {
     "araba": ["araba.png"], "balon": ["balon.png"], "ev": ["ev.png"], "kalem": ["kalem.png"],
-    "kapı": ["kapı.png"], "kitap": ["kitap.png"], "kitaplık": ["kitaplık.png"], "masa": ["masa.png"],
+    "kapı": ["kapi.png"], "kitap": ["kitap.png"], "kitaplık": ["kitaplik.png"], "masa": ["masa.png"],
     "pencere": ["pencere.png"], "sandalye": ["sandalye.png"], "televizyon": ["televizyon.png"],
     "yapboz": ["yapboz.png"], "yatak": ["yatak.png"],
 }
 
 # Meyve ve sebze listesi ve dosya adları
 FOOD_DATA = {
-    "armut": ["armut.png"], "domates": ["domates.png"], "elma": ["elma.png"], "havuç": ["havuç.png"],
+    "armut": ["armut.png"], "domates": ["domates.png"], "elma": ["elma.png"], "havuç": ["havuc.png"],
     "karpuz": ["karpuz.png"], "kiraz": ["kiraz.png"], "limon": ["limon.png"], "muz": ["muz.png"],
-    "patates": ["patates.png"], "portakal": ["portakal.png"], "salatalık": ["salatalık.png"],
-    "çilek": ["çilek.png"], "şeftali": ["şeftali.png"], "üzüm": ["üzüm.png"],
+    "patates": ["patates.png"], "portakal": ["portakal.png"], "salatalık": ["salatalik.png"],
+    "çilek": ["cilek.png"], "şeftali": ["seftali.png"], "üzüm": ["uzum.png"],
 }
 
 # Renkler için yerel resim yolları
