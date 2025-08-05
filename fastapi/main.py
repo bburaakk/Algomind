@@ -291,17 +291,19 @@ def create_test_endpoint(request: TestGenerateRequest = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Genel hata: {e}")
 #-------------------------------- Gemini Report --------------------
-class CreateReportRequest(BaseModel):
-    student_id: int
+
+class CreateTestResultRequest(BaseModel):
     test_id: int
+    student_id: int
+    test_title: str
+    ogrenci_adi: str
     konu: str
-    toplam_soru: int
     dogru_cevap: int
     yanlis_cevap: int
     bos_cevap: int
+    toplam_soru: int
     yuzde: float
-    sure: int
-    ogrenci_adi: str
+    sure: float
 
 def generate_report_comment(report_data: dict) -> str:
     prompts = {
@@ -334,28 +336,45 @@ Motivasyonunu artıracak pozitif bir dil kullan.
         print(f"Gemini API hatası: {e}")
         return "Rapor yorumu alınırken bir hata oluştu."
 
-@app.post("/create_report", response_model=schema.ReportOut)
-def create_report_with_gemini(request: CreateReportRequest, db: Session = Depends(get_db)):
+@app.post("/create_test_result_and_report")
+def create_test_result_and_report(request: CreateTestResultRequest, db: Session = Depends(get_db)):
     try:
-        report_data = request.dict()
-        gemini_comment = generate_report_comment(report_data)
-        db_report = models.Report(
-            student_id=request.student_id,
+        # 1. results tablosuna kayıt
+        new_result = models.Result(
             test_id=request.test_id,
+            student_id=request.student_id,
+            test_title=request.test_title,
+            ogrenci_adi=request.ogrenci_adi,
             konu=request.konu,
-            toplam_soru=request.toplam_soru,
             dogru_cevap=request.dogru_cevap,
             yanlis_cevap=request.yanlis_cevap,
             bos_cevap=request.bos_cevap,
+            toplam_soru=request.toplam_soru,
             yuzde=request.yuzde,
-            sure=request.sure,
-            yorum=gemini_comment
+            sure=request.sure
         )
-        db.add(db_report)
+        db.add(new_result)
         db.commit()
-        db.refresh(db_report)
-        return db_report
+        db.refresh(new_result)
+
+        # 2. Gemini ile rapor oluştur
+        gemini_prompt_data = request.dict()
+        gemini_comment = generate_report_comment(gemini_prompt_data)
+
+        # 3. report tablosuna kayıt
+        new_report = models.Report(
+            result_id=new_result.id,
+            rapor_metni=gemini_comment
+        )
+        db.add(new_report)
+        db.commit()
+        db.refresh(new_report)
+
+        return {
+            "result_id": new_result.id,
+            "report_id": new_report.id,
+            "rapor_metni": gemini_comment
+        }
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
