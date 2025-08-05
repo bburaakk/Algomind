@@ -156,3 +156,16 @@ def generate_report_comment(report_data):
         return "Rapor yorumu alınırken bir hata oluştu."
 
 
+def save_test_to_db(student_id, test_title):
+    api_url = 'http://35.202.188.175:8080/tests'
+    data = {'student_id': student_id, 'test_title': test_title}
+    print(f"DEBUG: Veritabanına test kaydediliyor. Veri: {data}")
+    try:
+        response = requests.post(api_url, json=data)
+        print(f"DEBUG: API yanıtı alındı. Status Code: {response.status_code}, Response: {response.text}")
+        if response.status_code == 200:
+            print("Test başarıyla kaydedildi.")
+        else:
+            print(f"Test kaydedilemedi. Hata: {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"API isteği sırasında bir hata oluştu: {e}")
