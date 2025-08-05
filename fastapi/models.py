@@ -52,8 +52,6 @@ class Test(Base):
     id = Column(Integer, primary_key=True, index=True)
     test_title = Column(String(255), nullable=False)
     student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
-    started_at = Column(DateTime)
-    finished_at = Column(DateTime)
     
     # Relationships
     student = relationship("Student", back_populates="tests")
