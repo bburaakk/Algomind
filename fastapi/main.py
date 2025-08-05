@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 import os
 import google.generativeai as genai
 import json
+from schema import TextRequest, StoryRequest, TestGenerateRequest, CreateTestResultRequest
 
 # --- Load environment and configure Gemini ---
 load_dotenv()
@@ -49,28 +50,6 @@ def get_db():
     finally:
         db.close()
 
-# --- Pydantic Models ---
-class TextRequest(BaseModel):
-    text: str
-
-class StoryRequest(BaseModel):
-    prompt: str
-
-class TestGenerateRequest(BaseModel):
-    test_type: str  # "math" veya "synonymAntonym"
-
-class CreateTestResultRequest(BaseModel):
-    test_id: int
-    student_id: int
-    test_title: str
-    ogrenci_adi: str
-    konu: str
-    dogru_cevap: int
-    yanlis_cevap: int
-    bos_cevap: int
-    toplam_soru: int
-    yuzde: float
-    sure: float
 
 # --- AUTH ---
 @app.post("/signup")
@@ -397,3 +376,4 @@ def create_test_result_and_report(request: CreateTestResultRequest, db: Session 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Hata oluştu: {str(e)}")
+
