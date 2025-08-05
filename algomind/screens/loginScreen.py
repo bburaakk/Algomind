@@ -39,6 +39,16 @@ class LoginScreen(Screen):
                 app = MDApp.get_running_app()
                 app.logged_in_user = login_text
                 app.user_role = role
+                
+                # Kullanıcı verilerini ayarla
+                user_info = {
+                    "name": login_text,  # Geçici olarak kullanıcı adını kullan
+                    "surname": "",       # Soyisim bilgisi yok
+                    "email": "",         # E-posta bilgisi yok
+                    "user_role": role
+                }
+                app.login_successful(user_info)
+                
                 self.manager.current = 'ogrenciEkleSec'
             else:
                 show_popup("Giriş Hatası", f"Bilinmeyen veya desteklenmeyen kullanıcı rolü: {role}")
@@ -55,6 +65,16 @@ class LoginScreen(Screen):
         app = MDApp.get_running_app()
         app.logged_in_user = 'Demo Öğretmen'
         app.user_role = 'ogretmen'
+        
+        # Kullanıcı verilerini ayarla
+        user_info = {
+            "name": "Demo",
+            "surname": "Öğretmen",
+            "email": "demo@ogretmen.com",
+            "user_role": "ogretmen"
+        }
+        app.login_successful(user_info)
+        
         self.manager.current = 'ogrenciEkleSec'
 
     def demo_login_veli(self):
@@ -67,6 +87,16 @@ class LoginScreen(Screen):
         app = MDApp.get_running_app()
         app.logged_in_user = 'Demo Veli'
         app.user_role = 'veli'
+        
+        # Kullanıcı verilerini ayarla
+        user_info = {
+            "name": "Demo",
+            "surname": "Veli",
+            "email": "demo@veli.com",
+            "user_role": "veli"
+        }
+        app.login_successful(user_info)
+        
         self.manager.current = 'ogrenciEkleSec'
 
     def on_enter(self, *args):

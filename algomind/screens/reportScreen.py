@@ -1,10 +1,4 @@
-"""
-Rapor Ekranı
-=============
-
-Bu modül, KivyMD uygulamasının rapor ekranını yönetir.
-Test sonuçlarını ve Gemini tarafından oluşturulan öğrenci gelişim raporlarını gösterir.
-"""
+# reportScreen.py
 
 from kivymd.uix.screen import MDScreen
 from kivy.properties import StringProperty
@@ -23,28 +17,34 @@ class RaporEkrani(MDScreen):
     """
     Test sonuçlarını ve Gemini analizini gösteren ekran.
     """
-    # .kv dosyasından gelen öğrenci adı için
-    student_name_text = StringProperty("Öğrenci Raporu")
+    student_name_text = StringProperty("Öğrenci Yükleniyor...")
 
     def on_enter(self, *args):
         """
         Ekran görüntülendiğinde rapor verilerini yükler.
+        """
+        # Veri yüklemesini küçük bir gecikmeyle planla
+        Clock.schedule_once(self.load_report_data, 0.1)
+        super().on_enter(*args)
+
+    def load_report_data(self, dt):
+        """
+        Gecikmeli olarak rapor verilerini yükler ve UI'ı günceller.
         """
         app = MDApp.get_running_app()
         report_data = getattr(app, 'last_test_result', None)
 
         if not report_data:
             show_popup("Hata", "Görüntülenecek rapor verisi bulunamadı.")
-            # Rapor verisi yoksa, içeriği temizle
             if self.ids.report_content:
                 self.ids.report_content.text = "Rapor verisi yok."
+            self.student_name_text = "Öğrenci Raporu"
             return
 
         self.student_name_text = f"{report_data.get('ogrenci_adi', 'Bilinmiyor')} Raporu"
         
         # Rapor içeriğini ve Gemini yorumunu yükle
         self.fetch_and_display_report(report_data)
-        super().on_enter(*args)
 
     def fetch_and_display_report(self, report_data):
         """
@@ -74,15 +74,9 @@ class RaporEkrani(MDScreen):
         PDF dosyasının içeriğini metin olarak okur ve döndürür.
         """
         try:
-            # reportScreen.py'nin konumu: .../Algomind/algomind/screens
             current_dir = os.path.dirname(os.path.abspath(__file__))
-
             app_root_dir = os.path.dirname(os.path.dirname(current_dir))
-
-            # Ardından dosya yolunu doğrudan bu ana dizinde arıyoruz.
             full_path = os.path.join(app_root_dir, file_path)
-
-            # Oluşturulan yolu kontrol edelim
             print(f"Kontrol edilen PDF yolu: {full_path}")
 
             reader = PdfReader(full_path)
@@ -101,11 +95,9 @@ class RaporEkrani(MDScreen):
         """
         requests kütüphanesini kullanarak Gemini'den rapor yorumu alır.
         """
-        # PDF dosyalarını okuyun
         kriterler_metni = self._read_pdf_criteria("kriterler.pdf")
         standartlar_metni = self._read_pdf_criteria("raporlama_standartlari.pdf")
 
-        # Her zaman PDF içeriği ile prompt oluştur
         base_prompt = f"""
         Aşağıdaki öğrenci test sonuçlarını ve ardından verilen değerlendirme kriterlerini ve raporlama standartlarını incele. Bu bilgilere göre öğrencinin performansını detaylı bir şekilde değerlendir ve rapor oluştur.
 
@@ -129,21 +121,15 @@ class RaporEkrani(MDScreen):
         """
 
         try:
-            # API isteği için payload oluştur
             chatHistory = [{"role": "user", "parts": [{"text": base_prompt}]}]
             payload = {"contents": chatHistory}
-
-            # Gemini'nin yeni versiyonu ve API URL'si
             apiUrl = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
-
-            # API isteğini gönder
             response = requests.post(apiUrl, headers={'Content-Type': 'application/json'}, json=payload, timeout=30)
             response.raise_for_status()
 
             result = response.json()
             gemini_comment = result['candidates'][0]['content']['parts'][0]['text']
 
-            # UI güncellemesini ana thread'de yap
             Clock.schedule_once(lambda dt: self._update_report_ui(report_data, gemini_comment))
 
         except requests.exceptions.RequestException as e:
