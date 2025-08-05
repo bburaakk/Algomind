@@ -13,7 +13,8 @@ from algomind.screens.studentAddSelection import OgrenciYonetimEkrani
 from algomind.screens.story_screen import StoryScreen
 from algomind.helpers import clear_text_inputs
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'BURAYA JSON GİRİLECEK!'
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'BURAYA JSON EKELENECEK'
 
 class MainApp(MDApp):
     title = "Algomind"
@@ -34,7 +35,7 @@ class MainApp(MDApp):
         Builder.load_file('algomind/UI/screens/profile.kv')
         Builder.load_file('algomind/UI/screens/examSelection.kv')
         Builder.load_file('algomind/UI/screens/studentAddSelection.kv')
-        Builder.load_file('algomind/screens/story_screen.kv')
+        Builder.load_file('algomind/UI/screens/story_screen.kv')
         main_layout = Builder.load_file('algomind/UI/screens/main.kv')
 
         sm = main_layout.ids.screen_manager
