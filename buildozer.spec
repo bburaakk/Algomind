@@ -37,8 +37,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,bcrypt,kivymd,pg8000,python-dateutil,scramp,asn1crypto,requests,google-cloud-texttospeech,google-generativeai,
-grpcio,protobuf,six
+requirements = python3,kivy,bcrypt,kivymd,pg8000,python-dateutil,scramp,asn1crypto,requests,google-generativeai
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
