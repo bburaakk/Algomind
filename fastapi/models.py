@@ -48,14 +48,13 @@ class Test(Base):
     student = relationship("Student", back_populates="tests")
     reports = relationship("Report", back_populates="test", cascade="all, delete")
 
-   class Report(Base):
-    __tablename__ = "reports"
+   class Result(Base):
+    __tablename__ = "results"
 
     id = Column(Integer, primary_key=True, index=True)
-    test_id = Column(Integer, ForeignKey("tests.id", ondelete="CASCADE"), nullable=False)
-    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
-    test_title = Column(String(255), nullable=False)
-    
+    test_id = Column(Integer, ForeignKey("tests.id", ondelete="CASCADE"))
+    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"))
+    test_title = Column(String)
     ogrenci_adi = Column(Text)
     konu = Column(Text)
     dogru_cevap = Column(Integer)
@@ -65,5 +64,9 @@ class Test(Base):
     yuzde = Column(Float)
     sure = Column(Float)
 
-    test = relationship("Test", back_populates="reports")
-    student = relationship("Student", back_populates="reports") students = relationship("Student", backref="user", cascade="all, delete")
+class Report(Base):
+    __tablename__ = "report"
+
+    id = Column(Integer, primary_key=True, index=True)
+    result_id = Column(Integer, ForeignKey("results.id", ondelete="CASCADE"))
+    rapor_metni = Column(Text)
