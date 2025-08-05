@@ -14,7 +14,7 @@ from algomind.screens.story_screen import StoryScreen
 from algomind.helpers import clear_text_inputs
 
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'BURAYA JSON EKELENECEK'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'C:\Users\eelif\Downloads\btkyarisma-467517-f60dc6263208.json'
 
 class MainApp(MDApp):
     title = "Algomind"
