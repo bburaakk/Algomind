@@ -9,7 +9,8 @@ from kivymd.uix.spinner import MDSpinner
 import threading
 import random
 import os
-from algomind.helpers import generate_test_questions, show_popup, save_test_to_db
+import requests
+from algomind.helpers import generate_test_questions, show_popup
 from algomind.data.test_data import ANIMAL_DATA, FOOD_DATA, OBJECT_DATA, COLOR_DATA
 from kivy.lang import Builder
 from kivy.uix.modalview import ModalView
@@ -96,9 +97,9 @@ class TestScreen(BaseScreen):
         """Soruları arkaplan thread'inde yükler ve ana thread'de UI'ı günceller."""
         test_map = {
             'animal': ("Hayvan Tanıma Testi", ANIMAL_DATA, "hayvanlar_images"),
-            'synonymAntonym': ("Eş ve Zıt Anlamlılar Testi", None, None),
+            'synonymAntonym': ("Eş ve Zıt Anlamlı Kelimeler Testi", None, None),
             'object': ("Nesne Tanıma Testi", OBJECT_DATA, "objects_images"),
-            'food': ("Yiyecekler Tanıma Testi", FOOD_DATA, "foods_images"),
+            'food': ("Yiyecekler Testi", FOOD_DATA, "foods_images"),
             'color': ("Renk Tanıma Testi", COLOR_DATA, "color_images"),
             'math': ("Matematik Testi", None, None)
         }
@@ -111,26 +112,9 @@ class TestScreen(BaseScreen):
 
         questions = []
         if self.test_type in ['math', 'synonymAntonym']:
-            questions = generate_test_questions(self.test_type)
-            if questions:
-                for question in questions:
-                    random.shuffle(question['options'])
+            questions = self._get_api_questions()
         else:
-            items = list(data_dict.keys())
-            random.shuffle(items)
-            for i in range(min(10, len(items))):
-                 correct_item = items[i]
-                 base_path = os.path.dirname(os.path.abspath(__file__))
-                 algomind_folder_path = os.path.dirname(base_path)
-                 image_path = os.path.join(algomind_folder_path, "assets", image_folder, random.choice(data_dict[correct_item]))
-                 wrong_items = [item for item in items if item != correct_item]
-                 options = [correct_item, random.choice(wrong_items)]
-                 random.shuffle(options)
-                 questions.append({
-                     "image_path": image_path,
-                     "correct_answer": correct_item,
-                     "options": options
-                 })
+            questions = self._get_image_questions(data_dict, image_folder)
 
         if not questions:
             Clock.schedule_once(lambda dt: self._on_questions_loaded(None))
@@ -138,6 +122,54 @@ class TestScreen(BaseScreen):
 
         self.test_questions = questions
         Clock.schedule_once(lambda dt: self._on_questions_loaded(self.test_questions))
+
+    def _get_api_questions(self):
+        """API'den matematik ve eş/zıt anlamlı sorularını alır."""
+        try:
+            # Endpoint'teki test_type mapping'e göre
+            api_test_type = 'synonymAntonym' if self.test_type == 'synonymAntonym' else 'math'
+            
+            payload = {"test_type": api_test_type}
+            response = requests.post("http://localhost:8000/create_test", json=payload, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                questions = data.get('questions', [])
+                # Seçenekleri karıştır
+                for question in questions:
+                    if 'options' in question:
+                        random.shuffle(question['options'])
+                return questions
+            else:
+                print(f"API hatası: {response.status_code} - {response.text}")
+                return []
+        except requests.exceptions.RequestException as e:
+            print(f"API bağlantı hatası: {e}")
+            return []
+        except Exception as e:
+            print(f"Genel hata: {e}")
+            return []
+
+    def _get_image_questions(self, data_dict, image_folder):
+        """Görsel tabanlı testler için soruları hazırlar."""
+        questions = []
+        items = list(data_dict.keys())
+        random.shuffle(items)
+        
+        for i in range(min(10, len(items))):
+            correct_item = items[i]
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            algomind_folder_path = os.path.dirname(base_path)
+            image_path = os.path.join(algomind_folder_path, "assets", image_folder, random.choice(data_dict[correct_item]))
+            wrong_items = [item for item in items if item != correct_item]
+            options = [correct_item, random.choice(wrong_items)]
+            random.shuffle(options)
+            questions.append({
+                "image_path": image_path,
+                "correct_answer": correct_item,
+                "options": options
+            })
+        return questions
 
     def _on_questions_loaded(self, questions):
         """Sorular yüklendiğinde çağrılır ve ilk soruyu gösterir."""
@@ -229,24 +261,65 @@ class TestScreen(BaseScreen):
         app = MDApp.get_running_app()
         total_questions = len(self.test_questions)
         percentage = (self.correct_answers / total_questions) * 100 if total_questions > 0 else 0
+        
+        # Boş cevap sayısını hesapla
+        bos_cevap = total_questions - (self.correct_answers + self.incorrect_answers)
 
-        print(f"DEBUG: finish_test çağrıldı. Öğrenci ID: {self.student_id}, test_title: {self.test_title}")
-        if self.student_id:
-            print("DEBUG: save_test_to_db fonksiyonu çağrılıyor.")
-            save_test_to_db(self.student_id, self.test_title)
-            print("DEBUG: save_test_to_db fonksiyonu çağrıldı.")
-
-        app.last_test_result = {
+        # Test sonucunu API'ye kaydet
+        test_result_data = {
+            "test_id": 1,  # Varsayılan test ID, gerekirse dinamik yapılabilir
+            "student_id": self.student_id,
+            "test_title": self.test_title,
             "ogrenci_adi": self.student_name,
             "konu": self.test_title,
             "dogru_cevap": self.correct_answers,
             "yanlis_cevap": self.incorrect_answers,
-            "bos_cevap": total_questions - (self.correct_answers + self.incorrect_answers),
+            "bos_cevap": bos_cevap,
             "toplam_soru": total_questions,
             "yuzde": round(percentage, 2),
             "sure": self.time_elapsed
         }
+
+        print(f"DEBUG: finish_test çağrıldı. Öğrenci ID: {self.student_id}, test_title: {self.test_title}")
+        
+        # API'ye test sonucunu kaydet ve rapor oluştur
+        if self.student_id:
+            self._save_test_result_to_api(test_result_data)
+        
+        # App'e son test sonucunu kaydet (rapor ekranı için)
+        app.last_test_result = test_result_data
         app.switch_screen('rapor_ekrani_screen')
+
+    def _save_test_result_to_api(self, test_data):
+        """Test sonucunu API'ye kaydeder ve rapor oluşturur."""
+        try:
+            response = requests.post(
+                "http://localhost:8000/create_test_result_and_report",
+                json=test_data,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                print(f"DEBUG: Test sonucu başarıyla kaydedildi. Result ID: {result.get('result_id')}, Report ID: {result.get('report_id')}")
+                # Rapor metnini app'e kaydet
+                app = MDApp.get_running_app()
+                app.last_report_text = result.get('rapor_metni', 'Rapor oluşturulamadı.')
+            else:
+                print(f"API hatası: {response.status_code} - {response.text}")
+                # Hata durumunda varsayılan rapor metni
+                app = MDApp.get_running_app()
+                app.last_report_text = "Test sonucu kaydedildi ancak rapor oluşturulamadı."
+                
+        except requests.exceptions.RequestException as e:
+            print(f"API bağlantı hatası: {e}")
+            # Bağlantı hatası durumunda varsayılan rapor metni
+            app = MDApp.get_running_app()
+            app.last_report_text = "Bağlantı hatası nedeniyle rapor oluşturulamadı."
+        except Exception as e:
+            print(f"Genel hata: {e}")
+            app = MDApp.get_running_app()
+            app.last_report_text = "Beklenmeyen bir hata nedeniyle rapor oluşturulamadı."
 
     def update_timer(self, dt):
         """Zamanlayıcıyı günceller."""
