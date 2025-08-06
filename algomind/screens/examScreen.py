@@ -12,9 +12,53 @@ import os
 from algomind.helpers import show_popup, save_test_to_db
 from algomind.data.test_data import ANIMAL_DATA, FOOD_DATA, OBJECT_DATA, COLOR_DATA
 from kivy.lang import Builder
+from typing import Optional, List, Dict, Any
 from kivy.uix.modalview import ModalView
+import requests
+import json
+from algomind.data.api_config import API_BASE_URL
 
 Builder.load_file('algomind/UI/screens/examScreen.kv')
+
+
+def generate_test_questions(test_type: str) -> Optional[List[Dict[str, Any]]]:
+    """
+    FastAPI backend'den belirtilen türde test soruları alır.
+    Args:
+        test_type (str): 'math' veya 'synonymAntonym' gibi test türü.
+    Returns:
+        list: Soru ve cevapları içeren bir liste veya hata durumunda None.
+    """
+    try:
+        # FastAPI'deki create_test endpoint'ini kullan
+        payload = {"test_type": test_type}
+        response = requests.post(
+            f"{API_BASE_URL}/create_test",
+            headers={'Content-Type': 'application/json'},
+            json=payload,
+            timeout=30
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        questions = result.get("questions", [])
+
+        if isinstance(questions, list) and all(isinstance(q, dict) for q in questions):
+            print(f"Backend'den {test_type} soruları başarıyla çekildi.")
+            return questions
+        else:
+            print(f"Backend'den beklenen formatta ({test_type}) yanıt alınamadı.")
+            return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"Backend isteği sırasında bir ağ hatası oluştu: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"Backend yanıtı JSON olarak ayrıştırılamadı: {e}")
+        return None
+    except Exception as e:
+        print(f"Genel bir hata oluştu: {e}")
+        return None
 
 
 class TestScreen(BaseScreen):
@@ -119,18 +163,19 @@ class TestScreen(BaseScreen):
             items = list(data_dict.keys())
             random.shuffle(items)
             for i in range(min(10, len(items))):
-                 correct_item = items[i]
-                 base_path = os.path.dirname(os.path.abspath(__file__))
-                 algomind_folder_path = os.path.dirname(base_path)
-                 image_path = os.path.join(algomind_folder_path, "assets", image_folder, random.choice(data_dict[correct_item]))
-                 wrong_items = [item for item in items if item != correct_item]
-                 options = [correct_item, random.choice(wrong_items)]
-                 random.shuffle(options)
-                 questions.append({
-                     "image_path": image_path,
-                     "correct_answer": correct_item,
-                     "options": options
-                 })
+                correct_item = items[i]
+                base_path = os.path.dirname(os.path.abspath(__file__))
+                algomind_folder_path = os.path.dirname(base_path)
+                image_path = os.path.join(algomind_folder_path, "assets", image_folder,
+                                          random.choice(data_dict[correct_item]))
+                wrong_items = [item for item in items if item != correct_item]
+                options = [correct_item, random.choice(wrong_items)]
+                random.shuffle(options)
+                questions.append({
+                    "image_path": image_path,
+                    "correct_answer": correct_item,
+                    "options": options
+                })
 
         if not questions:
             Clock.schedule_once(lambda dt: self._on_questions_loaded(None))
@@ -176,13 +221,15 @@ class TestScreen(BaseScreen):
 
         elif self.test_type == 'math':
             self.question_text = 'Aşağıdaki işlemi çözünüz'
-            question_label = MDLabel(text=question_data['question'], halign='center', theme_text_color='Primary', font_style='H5', size_hint_y=None, height=dp(300))
+            question_label = MDLabel(text=question_data['question'], halign='center', theme_text_color='Primary',
+                                     font_style='H5', size_hint_y=None, height=dp(300))
             if self.ids.get('image_area'):
                 self.ids.image_area.add_widget(question_label)
 
         elif self.test_type == 'synonymAntonym':
             self.question_text = 'Aşağıdaki kelimenin eş veya zıt anlamlısını seçiniz'
-            question_label = MDLabel(text=question_data['question'], halign='center', theme_text_color='Primary', font_style='H5', size_hint_y=None, height=dp(50))
+            question_label = MDLabel(text=question_data['question'], halign='center', theme_text_color='Primary',
+                                     font_style='H5', size_hint_y=None, height=dp(50))
             if self.ids.get('image_area'):
                 self.ids.image_area.add_widget(question_label)
 
