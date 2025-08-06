@@ -98,11 +98,12 @@ class TestScreen(BaseScreen):
         self.student_id = getattr(app, 'selected_student_id', None)
         self.test_type = app.current_test_type
 
-        # Zamanlayıcıyı başlat
-        Clock.schedule_interval(self.update_timer, 1)
-
         # Testi yükle
         self.setup_test()
+
+
+
+
 
     def on_leave(self, *args):
         """Ekrandan ayrılırken zamanlayıcıyı durdurur."""
@@ -196,6 +197,9 @@ class TestScreen(BaseScreen):
             return
 
         self.display_question()
+
+        # Sorular yüklendiğinde ve ilk soru ekrana gelmeye hazır olduğunda zamanlayıcıyı başlat
+        Clock.schedule_interval(self.update_timer, 1)
 
     def display_question(self):
         """Mevcut soruyu ekranda gösterir."""

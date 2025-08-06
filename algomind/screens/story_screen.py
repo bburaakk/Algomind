@@ -2,13 +2,18 @@ import os
 import tempfile
 import threading
 from functools import partial
-import httpx  # HTTP istek için
+import httpx
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivymd.uix.screen import MDScreen
+from kivy.properties import ObjectProperty  # Ekledik: play_btn'i doğrudan erişmek için
 
 
 class StoryScreen(MDScreen):
+    # ids.play_btn'e doğrudan erişim için ObjectProperty ekledik
+    # KV dosyasında bu id'ye sahip bir widget'ın tanımlı olması gerekir.
+    play_btn = ObjectProperty(None)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.temp_files = []
@@ -19,20 +24,43 @@ class StoryScreen(MDScreen):
         self.story_api_url = "http://35.202.188.175:8080/story/"
         self.tts_api_url = "http://35.202.188.175:8080/tts/"
 
+    def on_kv_post(self, base_widget):
+        # KV dosyasındaki widget'lar yüklendikten sonra play_btn referansını al
+        self.play_btn = self.ids.play_btn
+
+    def on_leave(self, *args):
+        """Bu ekrandan ayrılırken sesin durdurulmasını ve geçici dosyaların temizlenmesini sağlar."""
+        if self.sound and self.sound.state == 'play':
+            self.sound.stop()
+            self.sound.unload()
+            self.sound = None
+        if self.play_btn:
+            self.play_btn.disabled = False  # Sayfadan çıkarken butonu etkinleştir (varsa)
+        self.cleanup_temp_files()
+
     def generate_story(self, instance):
         if self.sound:
             self.sound.stop()
+            self.sound.unload()
             self.sound = None
+
+        # play_btn'i devre dışı bırakırken, ObjectProperty'yi kullanın
+        if self.play_btn:
+            self.play_btn.disabled = True
 
         topic = self.ids.topic_input.text.strip()
         if not topic:
             self.ids.story_label.text = "[color=ff0000]Lütfen bir konu girin.[/color]"
+            if self.play_btn:
+                self.play_btn.disabled = False
             return
 
         self.ids.story_label.text = ""
         self.ids.spinner.active = True
         self.ids.gen_btn.disabled = True
-        self.ids.play_btn.disabled = True
+        # play_btn'i devre dışı bırakırken, ObjectProperty'yi kullanın
+        if self.play_btn:
+            self.play_btn.disabled = True
 
         threading.Thread(target=self.fetch_and_speak_story_thread, args=(topic,), daemon=True).start()
 
@@ -102,15 +130,31 @@ class StoryScreen(MDScreen):
 
     def update_story_ui(self, title, story_body, *args):
         self.ids.story_label.text = f"[b]{title}[/b]\n\n{story_body}"
-        self.ids.scroll.scroll_y = 1
+       # self.ids.scroll.scroll_y = 1
+
 
     def play_audio(self, audio_file, *args):
+        # Önceki sesin durdurulması
+        if self.sound and self.sound.state == 'play':
+            self.sound.stop()
+            self.sound.unload()
+
         self.sound = SoundLoader.load(audio_file)
         if self.sound:
             self.sound.play()
-            self.ids.play_btn.disabled = False
+            if self.play_btn:  # play_btn'i ObjectProperty olarak kullan
+                self.play_btn.disabled = True
+            # Ses bittiğinde butonu tekrar etkinleştir
+            self.sound.bind(on_stop=self.enable_play_button)
         else:
             self.show_error("Ses dosyası oynatılamadı.")
+            if self.play_btn:  # Hata durumunda da butonu etkinleştir
+                self.play_btn.disabled = False
+
+    def enable_play_button(self, *args):
+        """Ses çalma bittiğinde play butonunu etkinleştirir."""
+        if self.play_btn:  # play_btn'i ObjectProperty olarak kullan
+            self.play_btn.disabled = False
 
     def show_error(self, error_message, *args):
         self.ids.story_label.text = f"[color=ff0000]{error_message}[/color]"
@@ -118,11 +162,17 @@ class StoryScreen(MDScreen):
     def deactivate_ui(self, *args):
         self.ids.spinner.active = False
         self.ids.gen_btn.disabled = False
+        # UI devre dışı bırakıldığında play_btn'i etkinleştir.
+        if self.play_btn:
+            self.play_btn.disabled = False
 
     def replay_audio(self, instance):
         if self.sound:
             self.sound.stop()
             self.sound.play()
+            if self.play_btn:  # Tekrar oynatırken butonu devre dışı bırak
+                self.play_btn.disabled = True
+            self.sound.bind(on_stop=self.enable_play_button)  # Tekrar oynatıldığında da bind et
 
     def cleanup_temp_files(self):
         for f in self.temp_files:
@@ -133,4 +183,7 @@ class StoryScreen(MDScreen):
         self.temp_files.clear()
 
     def on_stop(self):
+        # on_stop, uygulamanın kapanışında çağrılır.
+        # on_leave, ekran geçişlerinde çağrılır.
+        # Her ikisinde de temizlik yapmak güvenlidir.
         self.cleanup_temp_files()
