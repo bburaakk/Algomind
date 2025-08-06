@@ -36,6 +36,9 @@ class RaporEkrani(MDScreen):
 
     def display_initial_report_and_fetch_analysis(self, report_data):
         """İlk rapor bilgilerini gösterir ve arka planda analiz getirir"""
+        # Debug: report_data içeriğini logla
+        print(f"DEBUG: report_data içeriği: {report_data}")
+        
         initial_report_text = f"""
 [b]Öğrenci:[/b] {report_data.get('ogrenci_adi', 'Bilinmiyor')}
 [b]Konu:[/b] {report_data.get('konu', 'Bilinmiyor')}
@@ -131,14 +134,53 @@ class RaporEkrani(MDScreen):
             print(f"Mevcut rapor alınırken hata: {e}")
             raise
 
+    def _get_latest_test_id(self):
+        """Backend'den en son test ID'sini getirir"""
+        try:
+            url = f"{API_BASE_URL}/tests/"
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            tests = response.json()
+            
+            if tests:
+                # En son test ID'sini bul
+                latest_test = max(tests, key=lambda x: x.get('id', 0))
+                return latest_test.get('id')
+            return None
+        except Exception as e:
+            print(f"Latest test ID alınırken hata: {e}")
+            return None
+        """Backend'de yeni rapor oluşturur"""
+        try:
+            # Test sonucu ve rapor oluştur
+            url = f"{API_BASE_URL}/create_test_result_and_report"
+            
     def _create_new_report(self, report_data):
         """Backend'de yeni rapor oluşturur"""
         try:
             # Test sonucu ve rapor oluştur
             url = f"{API_BASE_URL}/create_test_result_and_report"
             
+            # Test ID'yi doğru şekilde al
+            app = MDApp.get_running_app()
+            last_test_id = getattr(app, 'last_saved_test_id', None)
+            
+            print(f"DEBUG: app'den alınan last_test_id: {last_test_id}")
+            print(f"DEBUG: report_data'dan test_id: {report_data.get('test_id')}")
+            
+            # Eğer app'de kayıtlı test_id yoksa, backend'den en son test ID'sini al
+            final_test_id = last_test_id
+            if not final_test_id:
+                print("DEBUG: App'de test_id yok, backend'den en son test ID'si alınıyor...")
+                final_test_id = self._get_latest_test_id()
+            
+            # Hala bulamadıysak, report_data'daki değeri kullan
+            if not final_test_id:
+                final_test_id = report_data.get('test_id', 1)
+                print(f"DEBUG: Backend'den de alınamadı, report_data'daki değer kullanılıyor: {final_test_id}")
+            
             payload = {
-                "test_id": report_data.get('test_id', 1),
+                "test_id": final_test_id,
                 "student_id": report_data.get('student_id', 1),
                 "test_title": report_data.get('test_title', report_data.get('konu', 'Test')),
                 "ogrenci_adi": report_data.get('ogrenci_adi', 'Bilinmiyor'),
@@ -151,7 +193,7 @@ class RaporEkrani(MDScreen):
                 "sure": float(report_data.get('sure', 0.0))
             }
 
-            print(f"DEBUG: Payload gönderiliyor: {payload}")
+            print(f"DEBUG: Final payload gönderiliyor: {payload}")
             
             response = requests.post(
                 url, 
@@ -170,7 +212,32 @@ class RaporEkrani(MDScreen):
             report_text = result.get('rapor_metni', 'Rapor oluşturulamadı.')
             
             # App'e result_id'yi kaydet (gelecekteki kullanım için)
-            app = MDApp.get_running_app()
+            if hasattr(app, 'last_test_result'):
+                app.last_test_result['result_id'] = result.get('result_id')
+            
+            return report_text
+
+        except Exception as e:
+            print(f"Yeni rapor oluşturulurken hata: {e}")
+            raise
+            
+            response = requests.post(
+                url, 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=60  # Gemini API yavaş olabilir
+            )
+            
+            print(f"DEBUG: Response status: {response.status_code}")
+            print(f"DEBUG: Response headers: {response.headers}")
+            print(f"DEBUG: Response text: {response.text}")
+            
+            response.raise_for_status()
+            
+            result = response.json()
+            report_text = result.get('rapor_metni', 'Rapor oluşturulamadı.')
+            
+            # App'e result_id'yi kaydet (gelecekteki kullanım için)
             if hasattr(app, 'last_test_result'):
                 app.last_test_result['result_id'] = result.get('result_id')
             
