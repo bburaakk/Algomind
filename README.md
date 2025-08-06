@@ -12,10 +12,10 @@ Bu proje, otizmli çocuklara özel olarak tasarlanmış etkileşimli bir eğitim
 - **Veli**: Test çözebilir ancak öğrenci ekleyemez, rapor görüntüleyemez.
 
 ### 🧠 Yapay Zeka Destekli Testler
-- Gemini API kullanılarak öğrenci profilinden yola çıkarak testler otomatik oluşturulur.
+- Gemini API kullanılarak testler otomatik oluşturulur.
 
 ### 📊 Kişiselleştirilmiş Raporlar
-- Test sonuçlarına göre AI tarafından açıklamalı ve görselleştirilmiş raporlar üretilir.
+- Test sonuçlarına göre AI tarafından açıklamalı ve özelleştirilmiş raporlar üretilir.
 
 ### 📚 Masal Dinleme Özelliği
 - Kullanıcı seçimine göre Gemini API tarafından hikayeler oluşturulur, anında değiştirme ve tekrar dinleme özelliği bulunur.
@@ -83,6 +83,7 @@ Bu proje, otizmli çocuklara özel olarak tasarlanmış etkileşimli bir eğitim
 * `POST /signup` – Kullanıcı kaydı (öğretmen/veli)
 * `POST /login` – Giriş yap, JWT token al
 * `GET /user/me` – Mevcut kullanıcı bilgileri (token ile)
+* `GET /users` – Mevcut kullanıcı bilgileri (id ile)
 
 ---
 
@@ -147,11 +148,8 @@ Bu proje, otizmli çocuklara özel olarak tasarlanmış etkileşimli bir eğitim
 
 <img width="1733" height="461" alt="postgres - public" src="https://github.com/user-attachments/assets/6c80206c-c13f-42e9-a4d7-fb6b68aaa2a1" />
 
-
 ---
-## 📦 Kurulum
 
----
 ## 📄 Lisans
 
 Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.

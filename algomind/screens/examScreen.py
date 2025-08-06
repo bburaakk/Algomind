@@ -12,13 +12,11 @@ import random
 import os
 from algomind.helpers import show_popup, save_test_to_db
 from algomind.data.test_data import ANIMAL_DATA, FOOD_DATA, OBJECT_DATA, COLOR_DATA
-from kivy.lang import Builder
 from typing import Optional, List, Dict, Any
 from kivy.uix.modalview import ModalView
 import requests
 import json
 from algomind.data.api_config import API_BASE_URL
-
 
 
 
@@ -100,10 +98,6 @@ class TestScreen(BaseScreen):
 
         # Testi yükle
         self.setup_test()
-
-
-
-
 
     def on_leave(self, *args):
         """Ekrandan ayrılırken zamanlayıcıyı durdurur."""
@@ -289,6 +283,7 @@ class TestScreen(BaseScreen):
             print("DEBUG: save_test_to_db fonksiyonu çağrıldı.")
 
         app.last_test_result = {
+            "student_id": self.student_id,
             "ogrenci_adi": self.student_name,
             "konu": self.test_title,
             "dogru_cevap": self.correct_answers,

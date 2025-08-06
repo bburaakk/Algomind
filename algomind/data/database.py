@@ -4,6 +4,7 @@ import os
 API_BASE_URL = "http://35.202.188.175:8080/"  # VM IP adresin
 TOKEN_FILE = "auth_token.txt"
 
+
 class AuthService:
     def do_signup(self, email, password, role, ad, soyad, username):
         try:
@@ -39,7 +40,13 @@ class AuthService:
             if response.status_code == 200:
                 token = response.json().get("access_token")
                 self._save_token(token)
-                return True, "Login successful"
+
+                # Token'ı kaydettikten sonra kullanıcı bilgilerini getir
+                user_info = self.get_user_info()
+                if user_info:
+                    return True, user_info
+                else:
+                    return True, {"user_id": None}  # Fallback
             else:
                 try:
                     detail = response.json().get("detail", "Login failed")
@@ -73,5 +80,22 @@ class AuthService:
             return None
         except Exception:
             return None
+
+    def get_user_info(self):
+        """Kullanıcının tüm bilgilerini getirir"""
+        token = self.get_token()
+        if not token:
+            return None
+        try:
+            response = requests.get(
+                f"{API_BASE_URL}/user/me",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            if response.status_code == 200:
+                return response.json()
+            return None
+        except Exception:
+            return None
+
 
 auth_service = AuthService()

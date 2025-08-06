@@ -1,3 +1,4 @@
+# studentAddSelection.py
 import json
 from algomind.screens.baseScreen import BaseScreen
 from kivy.properties import ObjectProperty, StringProperty, ListProperty
@@ -19,11 +20,13 @@ class StudentCard(ButtonBehavior, BoxLayout):
         app.selected_student_name = self.student_name
         app.root.ids.screen_manager.current = 'test_secim'
 
+
 class OgrenciYonetimEkrani(BaseScreen):
     student_list_grid = ObjectProperty(None)
     all_students_data = ListProperty([])
     _data_loaded = False
     req = None  # UrlRequest nesnesini tutmak için
+    current_user_id = None  # Mevcut kullanıcının ID'si
 
     def on_enter(self, *args):
         if not self._data_loaded:
@@ -31,6 +34,16 @@ class OgrenciYonetimEkrani(BaseScreen):
 
     def load_initial_data(self):
         try:
+            # Giriş yapmış kullanıcının ID'sini al
+            app = MDApp.get_running_app()
+            user_id = getattr(app, 'user_id', None)
+
+            if not user_id:
+                print("❌ Kullanıcı ID'si bulunamadı!")
+                return
+
+            # Geçici çözüm: Tüm öğrencileri getir, sonra filtrele
+            self.current_user_id = user_id
             self.req = UrlRequest(
                 "http://35.202.188.175:8080/students",
                 on_success=self._on_load_success,
@@ -43,19 +56,25 @@ class OgrenciYonetimEkrani(BaseScreen):
 
     def _on_load_success(self, request, result):
         students = result
+        # Sadece giriş yapmış kullanıcının öğrencilerini filtrele
+        filtered_students = [
+            student for student in students
+            if student.get('user_id') == self.current_user_id
+        ]
+
         self.all_students_data = [
             {
                 'id': str(student['id']),
                 'name': f"{student['first_name']} {student['last_name']}",
                 'avatar': 'algomind/assets/profile.png'
             }
-            for student in students
+            for student in filtered_students
         ]
         self.populate_student_list(self.all_students_data)
         self._data_loaded = True
 
     def _on_load_failure(self, request, result):
-        print(f"⚠️ Öğrenci verileri yüklenemedi (Failure): {request.resp_status} - {result}")
+        print(f"⚠ Öğrenci verileri yüklenemedi (Failure): {request.resp_status} - {result}")
 
     def _on_load_error(self, request, error):
         print(f"❌ Ağ bağlantı hatası (Load): {error}")
@@ -74,6 +93,14 @@ class OgrenciYonetimEkrani(BaseScreen):
     def add_student(self):
         print("Öğrenci ekleme işlemi başlatılıyor...")
         try:
+            # Giriş yapmış kullanıcının ID'sini al
+            app = MDApp.get_running_app()
+            user_id = getattr(app, 'user_id', None)
+
+            if not user_id:
+                print("❌ Kullanıcı ID'si bulunamadı!")
+                return
+
             veri = {
                 "first_name": self.ids.ad_input.text,
                 "last_name": self.ids.soyad_input.text,
@@ -82,7 +109,7 @@ class OgrenciYonetimEkrani(BaseScreen):
                 "interests": self.ids.sevdigi_seyler_input.text,
                 "education_status": self.ids.egitim_durumu_input.text,
                 "communication_level": self.ids.iletisim_duzeyi_input.text,
-                "user_id": 1
+                "user_id": user_id  # Giriş yapmış kullanıcının ID'sini kullan
             }
             print(f"Gönderilecek veri: {veri}")
             self._perform_add_student(veri)
