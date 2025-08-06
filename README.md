@@ -9,7 +9,7 @@ Bu proje, otizmli çocuklara özel olarak tasarlanmış etkileşimli bir eğitim
 
 ### 👨‍🏫 Kullanıcı Rolleri
 - **Öğretmen**: Öğrenci ekleyebilir, test çözebilir, raporları görüntüleyebilir.
-- **Veli**: Test çözebilir ancak öğrenci ekleyemez, rapor görüntüleyemez.
+- **Veli**: Test çözebilir ancak öğrenci ekleyemez, raporları görüntüleyebilir.
 
 ### 🧠 Yapay Zeka Destekli Testler
 - Gemini API kullanılarak öğrenci profilinden yola çıkarak testler otomatik oluşturulur.
