@@ -9,8 +9,7 @@ from kivymd.uix.spinner import MDSpinner
 import threading
 import random
 import os
-import requests
-from algomind.helpers import generate_test_questions, show_popup
+from algomind.helpers import show_popup, save_test_to_db
 from algomind.data.test_data import ANIMAL_DATA, FOOD_DATA, OBJECT_DATA, COLOR_DATA
 from kivy.lang import Builder
 from kivy.uix.modalview import ModalView
@@ -97,9 +96,9 @@ class TestScreen(BaseScreen):
         """Soruları arkaplan thread'inde yükler ve ana thread'de UI'ı günceller."""
         test_map = {
             'animal': ("Hayvan Tanıma Testi", ANIMAL_DATA, "hayvanlar_images"),
-            'synonymAntonym': ("Eş ve Zıt Anlamlı Kelimeler Testi", None, None),
+            'synonymAntonym': ("Eş ve Zıt Anlamlılar Testi", None, None),
             'object': ("Nesne Tanıma Testi", OBJECT_DATA, "objects_images"),
-            'food': ("Yiyecekler Testi", FOOD_DATA, "foods_images"),
+            'food': ("Yiyecekler Tanıma Testi", FOOD_DATA, "foods_images"),
             'color': ("Renk Tanıma Testi", COLOR_DATA, "color_images"),
             'math': ("Matematik Testi", None, None)
         }
@@ -112,9 +111,26 @@ class TestScreen(BaseScreen):
 
         questions = []
         if self.test_type in ['math', 'synonymAntonym']:
-            questions = self._get_api_questions()
+            questions = generate_test_questions(self.test_type)
+            if questions:
+                for question in questions:
+                    random.shuffle(question['options'])
         else:
-            questions = self._get_image_questions(data_dict, image_folder)
+            items = list(data_dict.keys())
+            random.shuffle(items)
+            for i in range(min(10, len(items))):
+                 correct_item = items[i]
+                 base_path = os.path.dirname(os.path.abspath(__file__))
+                 algomind_folder_path = os.path.dirname(base_path)
+                 image_path = os.path.join(algomind_folder_path, "assets", image_folder, random.choice(data_dict[correct_item]))
+                 wrong_items = [item for item in items if item != correct_item]
+                 options = [correct_item, random.choice(wrong_items)]
+                 random.shuffle(options)
+                 questions.append({
+                     "image_path": image_path,
+                     "correct_answer": correct_item,
+                     "options": options
+                 })
 
         if not questions:
             Clock.schedule_once(lambda dt: self._on_questions_loaded(None))
@@ -122,54 +138,6 @@ class TestScreen(BaseScreen):
 
         self.test_questions = questions
         Clock.schedule_once(lambda dt: self._on_questions_loaded(self.test_questions))
-
-    def _get_api_questions(self):
-        """API'den matematik ve eş/zıt anlamlı sorularını alır. Offline modda yerel sorular kullanır."""
-        try:
-            # Endpoint'teki test_type mapping'e göre
-            api_test_type = 'synonymAntonym' if self.test_type == 'synonymAntonym' else 'math'
-            
-            payload = {"test_type": api_test_type}
-            response = requests.post("http://35.202.188.175:8080/create_test", json=payload, timeout=5)
-            
-            if response.status_code == 200:
-                data = response.json()
-                questions = data.get('questions', [])
-                # Seçenekleri karıştır
-                for question in questions:
-                    if 'options' in question:
-                        random.shuffle(question['options'])
-                return questions
-            else:
-                print(f"API hatası: {response.status_code} - {response.text}")
-                return self._get_offline_questions()
-        except requests.exceptions.RequestException as e:
-            print(f"API bağlantı hatası: {e} - Offline moda geçiliyor")
-            return self._get_offline_questions()
-        except Exception as e:
-            print(f"Genel hata: {e} - Offline moda geçiliyor")
-            return self._get_offline_questions()
-
-    def _get_image_questions(self, data_dict, image_folder):
-        """Görsel tabanlı testler için soruları hazırlar."""
-        questions = []
-        items = list(data_dict.keys())
-        random.shuffle(items)
-        
-        for i in range(min(10, len(items))):
-            correct_item = items[i]
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            algomind_folder_path = os.path.dirname(base_path)
-            image_path = os.path.join(algomind_folder_path, "assets", image_folder, random.choice(data_dict[correct_item]))
-            wrong_items = [item for item in items if item != correct_item]
-            options = [correct_item, random.choice(wrong_items)]
-            random.shuffle(options)
-            questions.append({
-                "image_path": image_path,
-                "correct_answer": correct_item,
-                "options": options
-            })
-        return questions
 
     def _on_questions_loaded(self, questions):
         """Sorular yüklendiğinde çağrılır ve ilk soruyu gösterir."""
@@ -261,221 +229,24 @@ class TestScreen(BaseScreen):
         app = MDApp.get_running_app()
         total_questions = len(self.test_questions)
         percentage = (self.correct_answers / total_questions) * 100 if total_questions > 0 else 0
-        
-        # Boş cevap sayısını hesapla
-        bos_cevap = total_questions - (self.correct_answers + self.incorrect_answers)
 
-        # Test sonucunu API'ye kaydet - test_id'yi kaldır
-        test_result_data = {
-            "student_id": self.student_id,
-            "test_title": self.test_title,
+        print(f"DEBUG: finish_test çağrıldı. Öğrenci ID: {self.student_id}, test_title: {self.test_title}")
+        if self.student_id:
+            print("DEBUG: save_test_to_db fonksiyonu çağrılıyor.")
+            save_test_to_db(self.student_id, self.test_title)
+            print("DEBUG: save_test_to_db fonksiyonu çağrıldı.")
+
+        app.last_test_result = {
             "ogrenci_adi": self.student_name,
             "konu": self.test_title,
             "dogru_cevap": self.correct_answers,
             "yanlis_cevap": self.incorrect_answers,
-            "bos_cevap": bos_cevap,
+            "bos_cevap": total_questions - (self.correct_answers + self.incorrect_answers),
             "toplam_soru": total_questions,
             "yuzde": round(percentage, 2),
             "sure": self.time_elapsed
         }
-
-        print(f"DEBUG: finish_test çağrıldı. Öğrenci ID: {self.student_id}, test_title: {self.test_title}")
-        
-        # API'ye test sonucunu kaydet ve rapor oluştur
-        if self.student_id:
-            self._save_test_result_to_api(test_result_data)
-        
-        # App'e son test sonucunu kaydet (rapor ekranı için)
-        app.last_test_result = test_result_data
         app.switch_screen('rapor_ekrani_screen')
-
-    def _get_offline_questions(self):
-        """API kullanılamadığında yerel sorular oluşturur."""
-        questions = []
-        
-        if self.test_type == 'math':
-            # Basit matematik soruları
-            operations = ['+', '-', '*', '/']
-            for i in range(10):
-                if i < 4:  # Toplama
-                    a, b = random.randint(1, 50), random.randint(1, 50)
-                    correct = a + b
-                    question_text = f"{a} + {b} = ?"
-                elif i < 7:  # Çıkarma
-                    a, b = random.randint(20, 50), random.randint(1, 19)
-                    correct = a - b
-                    question_text = f"{a} - {b} = ?"
-                elif i < 9:  # Çarpma
-                    a, b = random.randint(1, 10), random.randint(1, 10)
-                    correct = a * b
-                    question_text = f"{a} × {b} = ?"
-                else:  # Bölme
-                    b = random.randint(2, 10)
-                    correct = random.randint(2, 10)
-                    a = correct * b
-                    question_text = f"{a} ÷ {b} = ?"
-                
-                wrong = correct + random.choice([-2, -1, 1, 2, 3])
-                if wrong == correct:
-                    wrong = correct + 5
-                
-                options = [str(correct), str(wrong)]
-                random.shuffle(options)
-                
-                questions.append({
-                    "question": question_text,
-                    "correct_answer": str(correct),
-                    "options": options
-                })
-        
-        elif self.test_type == 'synonymAntonym':
-            # Basit eş ve zıt anlamlı kelimeler
-            word_pairs = [
-                ("Büyük", "Küçük", "zıt", ["Küçük", "Dev"]),
-                ("Hızlı", "Yavaş", "zıt", ["Yavaş", "Süratli"]),
-                ("Mutlu", "Neşeli", "eş", ["Üzgün", "Neşeli"]),
-                ("Soğuk", "Sıcak", "zıt", ["Sıcak", "Buzlu"]),
-                ("Güzel", "Çirkin", "zıt", ["Çirkin", "Hoş"]),
-                ("Akıllı", "Zeki", "eş", ["Aptal", "Zeki"]),
-                ("Karanlık", "Aydınlık", "zıt", ["Aydınlık", "Gece"]),
-                ("Yüksek", "Alçak", "zıt", ["Alçak", "Uzun"]),
-                ("Temiz", "Kirli", "zıt", ["Kirli", "Pak"]),
-                ("Sessiz", "Gürültülü", "zıt", ["Gürültülü", "Sakin"])
-            ]
-            
-            random.shuffle(word_pairs)
-            for word, pair_word, relation, options in word_pairs[:10]:
-                if relation == "eş":
-                    question_text = f"'{word}' kelimesinin eş anlamlısı nedir?"
-                else:
-                    question_text = f"'{word}' kelimesinin zıt anlamlısı nedir?"
-                
-                random.shuffle(options)
-                questions.append({
-                    "question": question_text,
-                    "correct_answer": pair_word,
-                    "options": options
-                })
-        
-        return questions
-
-    def _save_test_result_to_api(self, test_data):
-        """Test sonucunu API'ye kaydeder ve rapor oluşturur. Offline modda basit rapor oluşturur."""
-        try:
-            # Önce test kaydını oluştur (eğer gerekiyorsa)
-            test_id = self._create_test_record_if_needed()
-            if test_id:
-                test_data['test_id'] = test_id
-            
-            response = requests.post(
-                "http://35.202.188.175:8080/create_test_result_and_report",
-                json=test_data,
-                timeout=5
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                print(f"DEBUG: Test sonucu başarıyla kaydedildi. Result ID: {result.get('result_id')}, Report ID: {result.get('report_id')}")
-                # Rapor metnini app'e kaydet
-                app = MDApp.get_running_app()
-                app.last_report_text = result.get('rapor_metni', 'Rapor oluşturulamadı.')
-            else:
-                print(f"API hatası: {response.status_code} - {response.text}")
-                self._create_offline_report(test_data)
-                
-        except requests.exceptions.RequestException as e:
-            print(f"API bağlantı hatası: {e} - Offline rapor oluşturuluyor")
-            self._create_offline_report(test_data)
-        except Exception as e:
-            print(f"Genel hata: {e} - Offline rapor oluşturuluyor")
-            self._create_offline_report(test_data)
-
-    def _create_test_record_if_needed(self):
-        """Tests tablosunda kayıt yoksa oluşturur, varsa ID'sini döner."""
-        try:
-            # Önce mevcut test kaydını kontrol et
-            response = requests.get(f"http://35.202.188.175:8080/tests/{self.test_title}", timeout=5)
-            
-            if response.status_code == 200:
-                test_data = response.json()
-                return test_data.get('id')
-            
-            # Test kaydı yoksa oluştur  
-            test_record = {
-                "title": self.test_title,
-                "description": f"{self.test_title} - Otomatik oluşturuldu",
-                "question_count": len(self.test_questions),
-                "test_type": self.test_type
-            }
-            
-            response = requests.post("http://35.202.188.175:8080/tests/", json=test_record, timeout=5)
-            
-            if response.status_code == 200:
-                result = response.json()
-                return result.get('id')
-            else:
-                print(f"Test kaydı oluşturulamadı: {response.status_code} - {response.text}")
-                return None
-                
-        except Exception as e:
-            print(f"Test kaydı kontrol/oluşturma hatası: {e}")
-            return None
-
-    def _create_offline_report(self, test_data):
-        """API kullanılamadığında basit rapor oluşturur."""
-        app = MDApp.get_running_app()
-        
-        success_rate = test_data['yuzde']
-        total_questions = test_data['toplam_soru']
-        correct_answers = test_data['dogru_cevap']
-        test_time = test_data['sure']
-        
-        # Performans değerlendirmesi
-        if success_rate >= 80:
-            performance = "mükemmel"
-            encouragement = "Tebrikler! Çok başarılısın."
-        elif success_rate >= 60:
-            performance = "iyi"
-            encouragement = "Güzel bir performans sergiledi."
-        elif success_rate >= 40:
-            performance = "orta"
-            encouragement = "Daha fazla çalışarak gelişebilirsin."
-        else:
-            performance = "geliştirilmeli"
-            encouragement = "Endişelenme, pratik yaparak daha da iyileşeceksin."
-        
-        # Test süresine göre yorum
-        if test_time < 120:  # 2 dakika
-            time_comment = "Soruları çok hızlı çözdün."
-        elif test_time < 300:  # 5 dakika
-            time_comment = "Sorular için uygun süre harcadın."
-        else:
-            time_comment = "Sorular üzerinde dikkatlice düşündün."
-        
-        report_text = f"""
-📊 {test_data['konu']} Raporu
-
-Sevgili {test_data['ogrenci_adi']},
-
-Bu testte {performance} bir performans gösterdin. {encouragement}
-
-📈 Test Sonuçların:
-• Toplam Soru: {total_questions}
-• Doğru Cevap: {correct_answers}
-• Başarı Oranı: %{success_rate}
-• Test Süresi: {test_time // 60} dakika {test_time % 60} saniye
-
-⏱️ {time_comment}
-
-💡 Öneriler:
-• Günlük pratik yapmaya devam et
-• Yanlış yaptığın konuları tekrar et
-• Sabırlı ol ve kendine güven
-
-Başarılarının devamını diliyorum! 🌟
-        """
-        
-        app.last_report_text = report_text.strip()
 
     def update_timer(self, dt):
         """Zamanlayıcıyı günceller."""
