@@ -55,49 +55,7 @@ class LoginScreen(Screen):
         else:
             show_popup("Giriş Hatası", str(message))
 
-    def demo_login_ogretmen(self):
-        """
-        Demo öğretmen girişi yapar.
 
-        Hızlı test ve geliştirme için önceden tanımlanmış bir öğretmen hesabıyla
-        giriş yapar.
-        """
-        app = MDApp.get_running_app()
-        app.logged_in_user = 'Demo Öğretmen'
-        app.user_role = 'ogretmen'
-        
-        # Kullanıcı verilerini ayarla
-        user_info = {
-            "name": "Demo",
-            "surname": "Öğretmen",
-            "email": "demo@ogretmen.com",
-            "user_role": "ogretmen"
-        }
-        app.login_successful(user_info)
-        
-        self.manager.current = 'ogrenciEkleSec'
-
-    def demo_login_veli(self):
-        """
-        Demo veli girişi yapar.
-
-        Hızlı test ve geliştirme için önceden tanımlanmış bir veli hesabıyla
-        giriş yapar.
-        """
-        app = MDApp.get_running_app()
-        app.logged_in_user = 'Demo Veli'
-        app.user_role = 'veli'
-        
-        # Kullanıcı verilerini ayarla
-        user_info = {
-            "name": "Demo",
-            "surname": "Veli",
-            "email": "demo@veli.com",
-            "user_role": "veli"
-        }
-        app.login_successful(user_info)
-        
-        self.manager.current = 'ogrenciEkleSec'
 
     def on_enter(self, *args):
         """
