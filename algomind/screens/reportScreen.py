@@ -150,11 +150,7 @@ class RaporEkrani(MDScreen):
         except Exception as e:
             print(f"Latest test ID alınırken hata: {e}")
             return None
-        """Backend'de yeni rapor oluşturur"""
-        try:
-            # Test sonucu ve rapor oluştur
-            url = f"{API_BASE_URL}/create_test_result_and_report"
-            
+
     def _create_new_report(self, report_data):
         """Backend'de yeni rapor oluşturur"""
         try:
@@ -220,32 +216,6 @@ class RaporEkrani(MDScreen):
         except Exception as e:
             print(f"Yeni rapor oluşturulurken hata: {e}")
             raise
-            
-            response = requests.post(
-                url, 
-                json=payload, 
-                headers={'Content-Type': 'application/json'},
-                timeout=60  # Gemini API yavaş olabilir
-            )
-            
-            print(f"DEBUG: Response status: {response.status_code}")
-            print(f"DEBUG: Response headers: {response.headers}")
-            print(f"DEBUG: Response text: {response.text}")
-            
-            response.raise_for_status()
-            
-            result = response.json()
-            report_text = result.get('rapor_metni', 'Rapor oluşturulamadı.')
-            
-            # App'e result_id'yi kaydet (gelecekteki kullanım için)
-            if hasattr(app, 'last_test_result'):
-                app.last_test_result['result_id'] = result.get('result_id')
-            
-            return report_text
-
-        except Exception as e:
-            print(f"Yeni rapor oluşturulurken hata: {e}")
-            raise
 
     def _update_report_ui(self, report_data, analysis_text):
         """UI'yi güncellenmiş rapor ile günceller"""
@@ -279,76 +249,4 @@ class RaporEkrani(MDScreen):
         else:
             show_popup("Hata", "Dışa aktarılacak rapor bulunamadı.")
 
-    def _generate_local_report(self, report_data):
-        """Backend erişilemediğinde lokal rapor oluşturur"""
-        ogrenci_adi = report_data.get('ogrenci_adi', 'Bilinmiyor')
-        konu = report_data.get('konu', 'Test')
-        dogru = report_data.get('dogru_cevap', 0)
-        yanlis = report_data.get('yanlis_cevap', 0)
-        toplam = report_data.get('toplam_soru', 0)
-        yuzde = report_data.get('yuzde', 0.0)
-        sure = report_data.get('sure', 0)
 
-        # Basit performans değerlendirmesi
-        if yuzde >= 80:
-            performance_level = "Mükemmel"
-            encouragement = "Harika bir performans sergiledi!"
-        elif yuzde >= 60:
-            performance_level = "İyi"
-            encouragement = "Başarılı bir performans gösterdi."
-        elif yuzde >= 40:
-            performance_level = "Orta"
-            encouragement = "Gelişim gösteriyor, biraz daha çalışmayla daha iyi sonuçlar alabilir."
-        else:
-            performance_level = "Gelişime Açık"
-            encouragement = "Bu konuda daha fazla pratik yapmasında fayda var."
-
-        # Süre analizi
-        if sure > 0:
-            sure_dakika = sure / 60
-            if sure_dakika < 5:
-                sure_analizi = "Hızlı cevap verme becerisi gösterdi."
-            elif sure_dakika < 10:
-                sure_analizi = "Uygun bir sürede test tamamlandı."
-            else:
-                sure_analizi = "Daha dikkatli düşünerek cevap vermeyi tercih etti."
-        else:
-            sure_analizi = "Test süresi kaydedilemedi."
-
-        # Konu bazlı öneriler
-        konu_onerileri = {
-            "Renk Tanıma Testi": "Günlük hayatta renkleri fark etmeye ve isimlendirmeye odaklanmasında fayda var. Boyama aktiviteleri ve renk eşleştirme oyunları öneriyoruz.",
-            "Matematik Testi": "Temel matematik becerileri için günlük pratik önemli. Sayma oyunları ve basit hesap makinesi kullanımı faydalı olabilir.",
-            "Eş ve Zıt Anlamlı Kelimeler Testi": "Kelime hazinesi geliştirmek için kitap okuma ve kelime oyunları öneriyoruz.",
-            "Hayvan Tanıma Testi": "Doğa belgeselleri izlemek ve hayvanat bahçesi ziyaretleri öğrenmeyi destekleyecektir.",
-            "Nesne Tanıma Testi": "Çevresindeki nesneleri tanımlama ve kategorileme aktiviteleri faydalı olacaktır.",
-            "Yiyecekler Testi": "Sağlıklı beslenme konusunda bilinç geliştirmek için mutfak aktivitelerine katılması önerilir."
-        }
-
-        oneriler = konu_onerileri.get(konu, "Bu konuda düzenli pratik yapması gelişimini destekleyecektir.")
-
-        local_report = f"""
-📊 PERFORMANS DEĞERLENDİRMESİ
-
-🎯 Genel Durum: {performance_level}
-{ogrenci_adi} {konu.lower()} konusunda {encouragement}
-
-📈 Detaylı Analiz:
-• Toplam {toplam} sorudan {dogru} tanesini doğru yanıtladı
-• Başarı oranı: %{yuzde}
-• {sure_analizi}
-
-🎈 Güçlü Yönler:
-• Test süresince konsantrasyonunu korudu
-• Sorulara cevap verme konusunda istekli davrandı
-• {konu.lower()} konusunda temel bilgi düzeyine sahip
-
-🌟 Gelişim Önerileri:
-{oneriler}
-
-💪 Motivasyon:
-Her çocuk kendi hızında öğrenir ve gelişir. {ogrenci_adi}'nin gösterdiği çaba takdire şayandır. Düzenli pratik ve destekle başarısını artıracağından eminiz!
-
-[Not: Bu rapor geçici olarak yerel sistem tarafından oluşturulmuştur.]
-"""
-        return local_report
