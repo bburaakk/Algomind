@@ -66,39 +66,51 @@ class RaporEkrani(MDScreen):
                     Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
                     return
 
-            # Option 2: Yeni rapor oluştur
-            report_text = self._create_new_report(report_data)
-            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
+            # Option 2: Yeni rapor oluştur (backend'den)
+            try:
+                report_text = self._create_new_report(report_data)
+                Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
+                return
+            except Exception as backend_error:
+                print(f"Backend rapor oluşturma başarısız: {backend_error}")
+                # Fallback: Lokal rapor oluştur
+                report_text = self._generate_local_report(report_data)
+                Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
+                return
 
         except requests.exceptions.ConnectionError as e:
             print(f"Backend'e bağlanırken bağlantı hatası: {e}")
-            error_msg = "Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin."
-            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, error_msg))
+            # Fallback: Lokal rapor oluştur
+            report_text = self._generate_local_report(report_data)
+            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
         
         except requests.exceptions.Timeout as e:
             print(f"Backend timeout hatası: {e}")
-            error_msg = "Sunucu yanıt vermedi. Lütfen tekrar deneyin."
-            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, error_msg))
+            report_text = self._generate_local_report(report_data)
+            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
         
         except requests.exceptions.HTTPError as e:
             print(f"Backend HTTP hatası: {e}")
-            if e.response.status_code == 404:
-                error_msg = "Rapor bulunamadı."
-            elif e.response.status_code == 500:
-                error_msg = "Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin."
-            else:
-                error_msg = f"HTTP {e.response.status_code} hatası oluştu."
-            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, error_msg))
+            # Response body'sini de logla
+            try:
+                error_detail = e.response.json() if e.response else {}
+                print(f"Hata detayı: {error_detail}")
+            except:
+                print(f"Response text: {e.response.text if e.response else 'No response'}")
+            
+            # Fallback: Lokal rapor oluştur
+            report_text = self._generate_local_report(report_data)
+            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
         
         except json.JSONDecodeError as e:
             print(f"JSON parse hatası: {e}")
-            error_msg = "Sunucu yanıtı işlenemedi."
-            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, error_msg))
+            report_text = self._generate_local_report(report_data)
+            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
         
         except Exception as e:
             print(f"Beklenmedik hata: {e}")
-            error_msg = "Rapor analizi alınırken bilinmeyen bir hata oluştu."
-            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, error_msg))
+            report_text = self._generate_local_report(report_data)
+            Clock.schedule_once(lambda dt: self._update_report_ui(report_data, report_text))
 
     def _get_existing_report(self, result_id):
         """Mevcut raporu backend'den getirir"""
@@ -139,12 +151,19 @@ class RaporEkrani(MDScreen):
                 "sure": float(report_data.get('sure', 0.0))
             }
 
+            print(f"DEBUG: Payload gönderiliyor: {payload}")
+            
             response = requests.post(
                 url, 
                 json=payload, 
                 headers={'Content-Type': 'application/json'},
                 timeout=60  # Gemini API yavaş olabilir
             )
+            
+            print(f"DEBUG: Response status: {response.status_code}")
+            print(f"DEBUG: Response headers: {response.headers}")
+            print(f"DEBUG: Response text: {response.text}")
+            
             response.raise_for_status()
             
             result = response.json()
@@ -192,3 +211,77 @@ class RaporEkrani(MDScreen):
             show_popup("Bilgi", "Rapor dışa aktarma özelliği yakında eklenecek.")
         else:
             show_popup("Hata", "Dışa aktarılacak rapor bulunamadı.")
+
+    def _generate_local_report(self, report_data):
+        """Backend erişilemediğinde lokal rapor oluşturur"""
+        ogrenci_adi = report_data.get('ogrenci_adi', 'Bilinmiyor')
+        konu = report_data.get('konu', 'Test')
+        dogru = report_data.get('dogru_cevap', 0)
+        yanlis = report_data.get('yanlis_cevap', 0)
+        toplam = report_data.get('toplam_soru', 0)
+        yuzde = report_data.get('yuzde', 0.0)
+        sure = report_data.get('sure', 0)
+
+        # Basit performans değerlendirmesi
+        if yuzde >= 80:
+            performance_level = "Mükemmel"
+            encouragement = "Harika bir performans sergiledi!"
+        elif yuzde >= 60:
+            performance_level = "İyi"
+            encouragement = "Başarılı bir performans gösterdi."
+        elif yuzde >= 40:
+            performance_level = "Orta"
+            encouragement = "Gelişim gösteriyor, biraz daha çalışmayla daha iyi sonuçlar alabilir."
+        else:
+            performance_level = "Gelişime Açık"
+            encouragement = "Bu konuda daha fazla pratik yapmasında fayda var."
+
+        # Süre analizi
+        if sure > 0:
+            sure_dakika = sure / 60
+            if sure_dakika < 5:
+                sure_analizi = "Hızlı cevap verme becerisi gösterdi."
+            elif sure_dakika < 10:
+                sure_analizi = "Uygun bir sürede test tamamlandı."
+            else:
+                sure_analizi = "Daha dikkatli düşünerek cevap vermeyi tercih etti."
+        else:
+            sure_analizi = "Test süresi kaydedilemedi."
+
+        # Konu bazlı öneriler
+        konu_onerileri = {
+            "Renk Tanıma Testi": "Günlük hayatta renkleri fark etmeye ve isimlendirmeye odaklanmasında fayda var. Boyama aktiviteleri ve renk eşleştirme oyunları öneriyoruz.",
+            "Matematik Testi": "Temel matematik becerileri için günlük pratik önemli. Sayma oyunları ve basit hesap makinesi kullanımı faydalı olabilir.",
+            "Eş ve Zıt Anlamlı Kelimeler Testi": "Kelime hazinesi geliştirmek için kitap okuma ve kelime oyunları öneriyoruz.",
+            "Hayvan Tanıma Testi": "Doğa belgeselleri izlemek ve hayvanat bahçesi ziyaretleri öğrenmeyi destekleyecektir.",
+            "Nesne Tanıma Testi": "Çevresindeki nesneleri tanımlama ve kategorileme aktiviteleri faydalı olacaktır.",
+            "Yiyecekler Testi": "Sağlıklı beslenme konusunda bilinç geliştirmek için mutfak aktivitelerine katılması önerilir."
+        }
+
+        oneriler = konu_onerileri.get(konu, "Bu konuda düzenli pratik yapması gelişimini destekleyecektir.")
+
+        local_report = f"""
+📊 PERFORMANS DEĞERLENDİRMESİ
+
+🎯 Genel Durum: {performance_level}
+{ogrenci_adi} {konu.lower()} konusunda {encouragement}
+
+📈 Detaylı Analiz:
+• Toplam {toplam} sorudan {dogru} tanesini doğru yanıtladı
+• Başarı oranı: %{yuzde}
+• {sure_analizi}
+
+🎈 Güçlü Yönler:
+• Test süresince konsantrasyonunu korudu
+• Sorulara cevap verme konusunda istekli davrandı
+• {konu.lower()} konusunda temel bilgi düzeyine sahip
+
+🌟 Gelişim Önerileri:
+{oneriler}
+
+💪 Motivasyon:
+Her çocuk kendi hızında öğrenir ve gelişir. {ogrenci_adi}'nin gösterdiği çaba takdire şayandır. Düzenli pratik ve destekle başarısını artıracağından eminiz!
+
+[Not: Bu rapor geçici olarak yerel sistem tarafından oluşturulmuştur.]
+"""
+        return local_report
