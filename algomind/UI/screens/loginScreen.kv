@@ -23,6 +23,13 @@
             Ellipse:
                 size: dp(30), dp(30)
                 pos: self.width * 0.85, self.height * 0.65
+        Label:
+            text: 'Giriş Yap'
+            font_size: '38sp'
+            bold: True
+            pos_hint: {'top': 0.85, 'x': 0.1}
+            size_hint: None, None
+            size: self.texture_size
 
         # HOCA / VELİ SEÇİM BUTONLARI
         BoxLayout:
@@ -106,47 +113,6 @@
                             pos: self.pos
                             radius: [dp(10)]
 
-                # Demo Giriş Butonları
-                Label:
-                    text: 'Demo Giriş (API olmadan test için)'
-                    color: 0.6, 0.6, 0.6, 1
-                    size_hint_y: None
-                    height: dp(25)
-                    font_size: '14sp'
-
-                BoxLayout:
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: dp(45)
-                    spacing: dp(10)
-
-                    Button:
-                        text: 'Demo Öğretmen'
-                        background_color: 0,0,0,0
-                        background_normal: ''
-                        color: 0.2, 0.7, 0.2, 1
-                        font_size: '16sp'
-                        on_release: root.demo_login_ogretmen()
-                        canvas.before:
-                            Color:
-                                rgba: 0.2, 0.7, 0.2, 1
-                            Line:
-                                width: 1.2
-                                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
-
-                    Button:
-                        text: 'Demo Veli'
-                        background_color: 0,0,0,0
-                        background_normal: ''
-                        color: 0.7, 0.2, 0.7, 1
-                        font_size: '16sp'
-                        on_release: root.demo_login_veli()
-                        canvas.before:
-                            Color:
-                                rgba: 0.7, 0.2, 0.7, 1
-                            Line:
-                                width: 1.2
-                                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
 
                 Label:
                     text: 'ya da'
