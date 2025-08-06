@@ -5,7 +5,6 @@ from kivymd.app import MDApp
 import threading
 import requests
 import json
-
 from algomind.helpers import show_popup
 from algomind.data.api_config import API_BASE_URL  # Backend URL'ini config'den al
 
@@ -45,7 +44,6 @@ class RaporEkrani(MDScreen):
 [b]Toplam Soru:[/b] {report_data.get('toplam_soru', 0)}
 [b]Doğru:[/b] {report_data.get('dogru_cevap', 0)}
 [b]Yanlış:[/b] {report_data.get('yanlis_cevap', 0)}
-[b]Boş:[/b] {report_data.get('bos_cevap', 0)}
 [b]Başarı Yüzdesi:[/b] %{report_data.get('yuzde', 0.0)}
 [b]Süre:[/b] {report_data.get('sure', 0)} saniye
 
