@@ -1,0 +1,105 @@
+#:kivy 2.1.0
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import MDTopAppBar kivymd.uix.toolbar.MDTopAppBar
+#:import MDScreen kivymd.uix.screen.MDScreen
+#:import MDCard kivymd.uix.card.MDCard
+#:import MDLabel kivymd.uix.label.MDLabel
+#:import MDSeparator kivymd.uix.card.MDSeparator
+#:import OneLineIconListItem kivymd.uix.list.OneLineIconListItem
+#:import IconLeftWidget kivymd.uix.list.IconLeftWidget
+#:import MDFillRoundFlatButton kivymd.uix.button.MDFillRoundFlatButton
+#:import FitImage kivymd.uix.fitimage.FitImage
+
+<ProfileEkrani>:
+    name: 'profile_screen' # <-- Adı doğru kullandığımızdan emin olalım
+
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: get_color_from_hex('#F0F4F8')
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # --- YAN MENÜYÜ AÇACAK OLAN ÜST ÇUBUK ---
+        MDTopAppBar:
+            title: "Profil"
+            elevation: 0
+            # Geri butonu yerine menü butonu ekliyoruz.
+            # Bu kod, ana menünün state'ini (açık/kapalı) değiştirir.
+            left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open" if app.root.ids.nav_drawer.state == "close" else "close")]]
+            md_bg_color: get_color_from_hex('#F0F4F8')
+            specific_text_color: get_color_from_hex('#1E3A5F')
+
+        ScrollView:
+            bar_width: dp(8)
+            bar_color: get_color_from_hex('#357ABD')
+
+            GridLayout:
+                cols: 1
+                padding: dp(20)
+                spacing: dp(20)
+                size_hint_y: None
+                height: self.minimum_height
+
+                # --- Profil Başlık Kartı ---
+                MDCard:
+                    orientation: 'vertical'
+                    padding: dp(25)
+                    spacing: dp(10)
+                    size_hint_y: None
+                    height: self.minimum_height
+                    md_bg_color: 1, 1, 1, 1
+                    radius: [dp(15)]
+
+                    MDCard:
+                        radius: [dp(60)]
+                        size_hint: None, None
+                        size: dp(120), dp(120)
+                        pos_hint: {'center_x': 0.5}
+                        md_bg_color: 1, 1, 1, 1
+                        elevation: 0
+                        FitImage:
+                            source: 'algomind/assets/profile.png'
+                            radius: [dp(60)]
+
+                    MDLabel:
+                        id: name_label
+                        text: "Kullanıcı Adı"
+                        font_style: "H5"
+                        halign: 'center'
+                        color: get_color_from_hex('#1E3A5F')
+                        adaptive_height: True
+                        padding: [0, dp(10), 0, 0]
+
+                    MDLabel:
+                        id: email_label
+                        text: "kullanici@email.com"
+                        font_style: "Body1"
+                        halign: 'center'
+                        theme_text_color: "Secondary"
+                        adaptive_height: True
+
+                # --- İşlem Menüsü Kartı ---
+                MDCard:
+                    orientation: 'vertical'
+                    padding: [dp(8), dp(8), dp(8), dp(8)]
+                    size_hint_y: None
+                    height: self.minimum_height
+                    md_bg_color: 1, 1, 1, 1
+                    radius: [dp(15)]
+
+                    OneLineIconListItem:
+                        text: "Profili Düzenle"
+                        on_release: root.edit_profile()
+                        IconLeftWidget:
+                            icon: "account-edit-outline"
+
+                    MDSeparator:
+
+                    OneLineIconListItem:
+                        text: "Şifre Değiştir"
+                        on_release: root.change_password()
+                        IconLeftWidget:
+                            icon: "lock-reset"

@@ -1,0 +1,57 @@
+# Byte-code ve Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# C extensions
+*.so
+
+# Dağıtım / Paketleme
+build/
+dist/
+*.egg-info/
+sdist/
+wheel/
+*.tar.gz
+*.zip
+
+# Sanal Ortam (Virtual Environment)
+# Muhtemelen 5000 dosyanın çoğu buradan geliyordu
+.venv/
+venv/
+ENV/
+env/
+
+# Test ve Raporlama
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# Editör ve IDE'ye özel dosyalar
+.idea/
+.vscode/
+*.swp
+
+# Buildozer'a özel dosyalar
+.buildozer/
+# bin/ klasörü zaten burada görmezden geliniyor
+bin/
+libs/
+
+# --- Projenize Özel Kurallar (Lütfen Gözden Geçirin) ---
+
+# Bu klasörler, otomatik oluşturulmuş varlıklar veya arayüz dosyaları
+# içeriyor olabilir. Eğer sizin yazdığınız kaynak kodları içeriyorsa,
+# bu satırları silerek Git'e eklemelisiniz./
+/algomind/UI/
+
+# Aşağıdaki dosyaların versiyon kontrolünde (Git'te) TUTULMASI genellikle
+# tavsiye edilir. Projenizin yapılandırmasını ve ana dosyalarını içerirler.
+# Bu dosyaları Git'e eklemek için aşağıdaki satırları silmeyi düşünebilirsiniz.
+/buildozer.spec
+/.python-version
+/main.py
+/algomind/data/database.py

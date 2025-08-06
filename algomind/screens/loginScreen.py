@@ -1,0 +1,108 @@
+from kivy.uix.screenmanager import Screen
+from algomind.data import database
+from algomind.helpers import show_popup
+from kivymd.app import MDApp
+
+
+class LoginScreen(Screen):
+    """
+    Kullanıcı giriş ekranı.
+
+    Bu ekran, kullanıcıların kullanıcı adı ve şifreleri ile sisteme giriş
+    yapmalarını sağlar. Ayrıca demo girişleri için de metodlar içerir.
+    """
+
+    def do_login(self, login_text, password_text):
+        """
+        Kullanıcı giriş işlemini gerçekleştirir.
+
+        Kullanıcı adı ve şifreyi alarak veritabanı üzerinden kimlik doğrulaması
+        yapar. Başarılı olursa, kullanıcı rolünü alır ve ilgili ana ekrana
+        yönlendirir. Başarısız olursa, bir hata mesajı gösterir.
+
+        Args:
+            login_text (str): Kullanıcının girdiği kullanıcı adı.
+            password_text (str): Kullanıcının girdiği şifre.
+        """
+        if not login_text or not password_text:
+            show_popup("Giriş Hatası", "Kullanıcı adı ve şifre boş bırakılamaz.")
+            return
+
+        # FastAPI üzerinden giriş kontrolü
+        success, message = database.auth_service.login(login_text, password_text)
+
+        if success:
+            # Token alındı, şimdi kullanıcı rolünü çek
+            role = database.auth_service.get_user_role()
+
+            if role in ('ogretmen', 'veli'):
+                app = MDApp.get_running_app()
+                app.logged_in_user = login_text
+                app.user_role = role
+                
+                # Kullanıcı verilerini ayarla
+                user_info = {
+                    "name": login_text,  # Geçici olarak kullanıcı adını kullan
+                    "surname": "",       # Soyisim bilgisi yok
+                    "email": "",         # E-posta bilgisi yok
+                    "user_role": role
+                }
+                app.login_successful(user_info)
+                
+                self.manager.current = 'ogrenciEkleSec'
+            else:
+                show_popup("Giriş Hatası", f"Bilinmeyen veya desteklenmeyen kullanıcı rolü: {role}")
+        else:
+            show_popup("Giriş Hatası", str(message))
+
+    def demo_login_ogretmen(self):
+        """
+        Demo öğretmen girişi yapar.
+
+        Hızlı test ve geliştirme için önceden tanımlanmış bir öğretmen hesabıyla
+        giriş yapar.
+        """
+        app = MDApp.get_running_app()
+        app.logged_in_user = 'Demo Öğretmen'
+        app.user_role = 'ogretmen'
+        
+        # Kullanıcı verilerini ayarla
+        user_info = {
+            "name": "Demo",
+            "surname": "Öğretmen",
+            "email": "demo@ogretmen.com",
+            "user_role": "ogretmen"
+        }
+        app.login_successful(user_info)
+        
+        self.manager.current = 'ogrenciEkleSec'
+
+    def demo_login_veli(self):
+        """
+        Demo veli girişi yapar.
+
+        Hızlı test ve geliştirme için önceden tanımlanmış bir veli hesabıyla
+        giriş yapar.
+        """
+        app = MDApp.get_running_app()
+        app.logged_in_user = 'Demo Veli'
+        app.user_role = 'veli'
+        
+        # Kullanıcı verilerini ayarla
+        user_info = {
+            "name": "Demo",
+            "surname": "Veli",
+            "email": "demo@veli.com",
+            "user_role": "veli"
+        }
+        app.login_successful(user_info)
+        
+        self.manager.current = 'ogrenciEkleSec'
+
+    def on_enter(self, *args):
+        """
+        Ekran görüntülendiğinde çağrılır.
+
+        Kullanıcı adı alanına odaklanır.
+        """
+        self.ids.login.focus = True

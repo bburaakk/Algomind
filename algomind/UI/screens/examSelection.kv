@@ -1,0 +1,124 @@
+#:kivy 2.1.0
+#:import Window kivy.core.window.Window
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import MDTopAppBar kivymd.uix.toolbar.MDTopAppBar
+#:import MDScreen kivymd.uix.screen.MDScreen
+#:import ButtonBehavior kivy.uix.behaviors.button.ButtonBehavior
+
+
+<TestButton@ButtonBehavior+BoxLayout>:
+    orientation: 'vertical'
+    padding: [dp(8), dp(8), dp(8), dp(8)]
+    spacing: dp(5)
+    text: 'Selam'
+    icon_source: ''
+    text_boxed: False
+
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 0.1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(15)]
+        Color:
+            rgba: (52/255, 152/255, 219/255, 1)
+        Line:
+            width: 1.5
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+
+    Image:
+        source: root.icon_source
+        size_hint_y: 0.3
+        pos_hint: {'x': -0.3, 'top': 0.92}
+        allow_stretch: True
+
+    BoxLayout:
+        size_hint_y: 0.35
+        canvas.before:
+            Color:
+                rgba: (41/255, 128/255, 185/255, 0.5) if root.text_boxed else (0, 0, 0, 0)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(10)]
+            Color:
+                rgba: (52/255, 152/255, 219/255, 1) if root.text_boxed else (0, 0, 0, 0)
+            Line:
+                width: 1.5
+                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+
+        Label:
+            text: root.text
+            font_name: 'algomind/assets/GochiHand-Regular.ttf'
+            font_size: '18sp'
+            color: (1, 1, 1, 0.9)
+
+
+<TestSecimEkrani>:
+    name: 'test_secim'
+
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: get_color_from_hex('#F0F4F8')
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        MDTopAppBar:
+            title: "Test Seçimi"
+            elevation: 0
+            left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open" if app.root.ids.nav_drawer.state == "close" else "close")]]
+            md_bg_color: (74/255, 144/255, 226/255, 1)
+
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(20)
+            spacing: dp(15)
+
+            GridLayout:
+                cols: 2
+                spacing: dp(20)
+                padding: dp(20)
+
+                # --- DÜZELTME: on_release eylemleri app.start_test'i çağıracak şekilde güncellendi ---
+
+                TestButton:
+                    text: "Matematik"
+                    icon_source: 'algomind/assets/math.png'
+                    on_release: app.start_test('math') # Düzeltildi
+                    text_boxed: True
+
+                TestButton:
+                    text: "Hayvanlar"
+                    icon_source: 'algomind/assets/animal.png' # Bu resmi eklemeniz gerekebilir
+                    on_release: app.start_test('animal') # Düzeltildi
+                    text_boxed: True
+
+                TestButton:
+                    text: "Renkler"
+                    icon_source: 'algomind/assets/color.png' # Bu resmi eklemeniz gerekebilir
+                    on_release: app.start_test('color') # Düzeltildi
+                    text_boxed: True
+
+                TestButton:
+                    text: "Yiyecekler"
+                    icon_source: 'algomind/assets/food.png' # Bu resmi eklemeniz gerekebilir
+                    on_release: app.start_test('food') # Düzeltildi
+                    text_boxed: True
+
+                # Not: Aşağıdaki testlerin mantığını examScreen.py'a eklemeniz gerekecektir.
+                # Şimdilik sadece kimliklerini gönderiyorlar.
+                TestButton:
+                    text: "Objeler"
+                    icon_source: 'algomind/assets/object.png'
+                    on_release: app.start_test('object') # Düzeltildi
+                    text_boxed: True
+
+                TestButton:
+                    text: "Meyve Sebzeler"
+                    icon_source: 'algomind/assets/fruit_vegetable.png' # Resim yolu düzeltildi
+                    on_release: app.start_test('synonymAntonym') # Düzeltildi
+                    text_boxed: True
