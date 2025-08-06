@@ -69,38 +69,68 @@ Bu proje, otizmli çocuklara özel olarak tasarlanmış etkileşimli bir eğitim
 ├── users
 ├── students
 ├── tests
-└── reports
+└── results
+└── report
 
 ````
 
 ---
 
-## 📑 API Endpointleri
+## 📑 API Endpointleri (FastAPI)
 
-### ✅ Authentication
-- `POST /signup` – Kullanıcı kaydı
-- `POST /login` – JWT token ile giriş
+### ✅ Kimlik Doğrulama (Authentication)
 
-### 👨‍🎓 Öğrenci
-- `GET /students` – Öğrencileri listele (öğretmene özel)
-- `POST /students` – Yeni öğrenci ekle
-- `GET /students/{id}` – Öğrenci detayları
-- `GET /students/{id}/reports-summary` – Rapor özeti
-- `GET /students/{id}/reports-detailed` – Detaylı rapor
-
-### 🧪 Test
-- `GET /tests/` – Tüm testleri getir
-- `POST /tests/` – Yeni test oluştur (AI ile)
-
-### 📈 Rapor
-- `POST /reports/` – Rapor oluştur
-- `GET /reports/` – Tüm raporlar
-- `GET /reports/by-student/{id}`
-- `GET /reports/by-test/{id}`
-- `GET /reports/latest`
-- `GET /reports/summary`
+* `POST /signup` – Kullanıcı kaydı (öğretmen/veli)
+* `POST /login` – Giriş yap, JWT token al
+* `GET /user/me` – Mevcut kullanıcı bilgileri (token ile)
 
 ---
+
+### 👨‍🎓 Öğrenci İşlemleri
+
+* `GET /students` – Tüm öğrencileri getir (öğretmen)
+* `POST /students` – Yeni öğrenci oluştur
+* `GET /students/{student_id}` – Belirli öğrenci bilgisi
+* `GET /students/{student_id}/results-summary` – Öğrenciye ait test özetleri
+* `GET /students/{student_id}/results-detailed` – Öğrenciye ait test detayları
+
+---
+
+### 🧪 Test İşlemleri
+
+* `GET /tests/` – Tüm testleri getir
+* `POST /tests/` – Yeni test oluştur
+* `GET /tests/{test_id}` – Belirli test bilgisi
+* `POST /create_test` – AI ile test üret (Gemini)
+* `POST /create_test_result_and_report` – Test çözümü sonrası sonuç ve rapor oluştur
+
+---
+
+### 📊 Test Sonuçları
+
+* `GET /results/` – Tüm sonuçlar
+* `GET /results/by-student/{student_id}` – Öğrencinin tüm sonuçları
+* `GET /results/by-test/{test_id}` – Teste ait tüm sonuçlar
+* `GET /results/latest` – En son test sonucu
+* `GET /results/summary` – Genel sonuç özeti
+
+---
+
+### 📈 Raporlar
+
+* `GET /reports/` – Tüm raporları getir
+* `GET /reports/by-result/{result_id}` – Belirli sonuca ait rapor
+* `GET /reports/latest` – En son oluşturulan rapor
+
+---
+
+### 🔊 Hikaye ve Seslendirme (AI Tabanlı)
+
+* `POST /story/` – Masal/hikaye üret (Gemini API)
+* `POST /tts/` – Metni seslendir (Google Cloud TTS)
+
+---
+
 
 ## 🔐 Güvenlik ve Ağ
 
@@ -115,7 +145,8 @@ Bu proje, otizmli çocuklara özel olarak tasarlanmış etkileşimli bir eğitim
 
 ## ✅ Veritabanı Şeması (PostgreSQL)
 
-<img width="1314" height="695" alt="postgres - public - students" src="https://github.com/user-attachments/assets/faf574a1-305d-4360-9b59-99cd17aa80a3" />
+<img width="1733" height="461" alt="postgres - public" src="https://github.com/user-attachments/assets/6c80206c-c13f-42e9-a4d7-fb6b68aaa2a1" />
+
 
 ---
 ## 📦 Kurulum
