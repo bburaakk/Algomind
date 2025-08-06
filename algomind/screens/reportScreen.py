@@ -1,5 +1,3 @@
-# reportScreen.py
-
 from kivymd.uix.screen import MDScreen
 from kivy.properties import StringProperty
 from kivy.clock import Clock
