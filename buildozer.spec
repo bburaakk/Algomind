@@ -37,14 +37,14 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,bcrypt,kivymd,pg8000,python-dateutil,scramp,asn1crypto,requests,ffpyplayer
+requirements = python3,kivy,bcrypt,kivymd,pg8000,python-dateutil,scramp,asn1crypto,requests,ffpyplayer,openssl,httpx,httpcore,h11
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
 # requirements.source.kivy = ../../kivy
 
 # (str) Presplash of the application
-presplash.filename = %(source.dir)s/algomind/assets/asdf.png
+presplash.filename = %(source.dir)s/algomind/assets/splash.png
 presplash.scale = fill
 
 # (str) Icon of the application
