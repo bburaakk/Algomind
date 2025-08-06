@@ -1,8 +1,9 @@
+from kivymd.uix.dialog import MDDialog
 from algomind.screens.baseScreen import BaseScreen
 from kivy.properties import NumericProperty, StringProperty, ListProperty, ObjectProperty, Clock
 from kivy.metrics import dp
 from kivymd.app import MDApp
-from kivymd.uix.button import MDRaisedButton
+from kivymd.uix.button import MDRaisedButton, MDFlatButton
 from kivy.uix.image import Image
 from kivymd.uix.label import MDLabel
 from kivymd.uix.spinner import MDSpinner
@@ -18,7 +19,7 @@ import requests
 import json
 from algomind.data.api_config import API_BASE_URL
 
-Builder.load_file('algomind/UI/screens/examScreen.kv')
+
 
 
 def generate_test_questions(test_type: str) -> Optional[List[Dict[str, Any]]]:
@@ -139,7 +140,7 @@ class TestScreen(BaseScreen):
     def _load_questions_thread(self):
         """Soruları arkaplan thread'inde yükler ve ana thread'de UI'ı günceller."""
         test_map = {
-            'animal': ("Hayvan Tanıma Testi", ANIMAL_DATA, "hayvanlar_images"),
+            'animal': ("Hayvan Tanıma Testi", ANIMAL_DATA, "animal_images"),
             'synonymAntonym': ("Eş ve Zıt Anlamlılar Testi", None, None),
             'object': ("Nesne Tanıma Testi", OBJECT_DATA, "objects_images"),
             'food': ("Yiyecekler Tanıma Testi", FOOD_DATA, "foods_images"),
@@ -301,3 +302,43 @@ class TestScreen(BaseScreen):
         minutes = self.time_elapsed // 60
         seconds = self.time_elapsed % 60
         self.formatted_time = f"{minutes:02d}:{seconds:02d}"
+
+    def finish_test_early(self):
+        """
+        Kullanıcı testi manuel olarak bitirmek istediğinde çağrılır.
+        Bir onay penceresi gösterir.
+        """
+        Clock.unschedule(self.update_timer)  # Zamanlayıcıyı durdur
+
+        # Onay penceresi oluştur
+        dialog = MDDialog(
+            title="Testi Bitir",
+            text="Emin misiniz? Testi bitirdikten sonra sonuçlarınızı göreceksiniz.",
+            buttons=[
+                MDFlatButton(
+                    text="İptal",
+                    theme_text_color="Primary",
+                    on_release=lambda x: self._dismiss_dialog_and_restart_timer(dialog)
+                ),
+                MDRaisedButton(
+                    text="Evet, Bitir",
+                    md_bg_color=MDApp.get_running_app().theme_cls.error_color,
+                    on_release=lambda x: self._confirm_finish_test(dialog)
+                ),
+            ],
+        )
+        dialog.open()
+
+    def _dismiss_dialog_and_restart_timer(self, dialog):
+        """
+        Onay penceresini kapatır ve zamanlayıcıyı yeniden başlatır.
+        """
+        dialog.dismiss()
+        Clock.schedule_interval(self.update_timer, 1)  # Zamanlayıcıyı tekrar başlat
+
+    def _confirm_finish_test(self, dialog):
+        """
+        Kullanıcı onayladıktan sonra testi bitirme işlemini başlatır.
+        """
+        dialog.dismiss()
+        self.finish_test()

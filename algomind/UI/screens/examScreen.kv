@@ -1,7 +1,3 @@
-#:kivy 2.1.0
-#:import get_color_from_hex kivy.utils.get_color_from_hex
-#:import Clock kivy.clock.Clock
-
 <TestScreen>:
     name: 'test_screen'
 
@@ -49,11 +45,11 @@
             height: self.texture_size[1]
             theme_text_color: 'Secondary'
 
-
-        # Ana İçerik Kartı
+        # Ana İçerik Kartı (Şimdi bu kart, buton için yer bırakacak şekilde esnek olmalı)
         MDCard:
             orientation: 'vertical'
-            size_hint: 1, 1
+            # size_hint_y: 1 olarak bırakın, çünkü üstteki MDBoxLayout kalan alanı kaplayacak
+            size_hint: 1, 1 
             md_bg_color: get_color_from_hex('#FFFFFF')
             radius: [dp(20),]
             padding: dp(20)
@@ -79,14 +75,11 @@
             MDBoxLayout:
                 id: options_area
                 orientation: 'horizontal'
-                # Yalnızca çocukların ihtiyaç duyduğu kadar yer kapla
                 size_hint: (None, None)
-                # Genişliği ve yüksekliği çocuklara göre ayarla
                 width: self.minimum_width
                 height: self.minimum_height
-                # Ebeveynin ortasına hizala
                 pos_hint: {'center_x': 0.5}
-                spacing: dp(20) # Butonlar arası boşluk
+                spacing: dp(20)
 
                 # --- TEST BUTONLARI ---
                 MDRaisedButton:
@@ -95,4 +88,16 @@
                     text: "Seçenek B"
                 # --- TEST BUTONLARI SONU ---
 
-
+        # "Testi Bitir" butonu için yeni, ayrı bir alan
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(60) # Buton için yeterli bir yükseklik ayarla
+            padding: dp(10)
+            pos_hint: {'center_x': 0.5} # Bu kutuyu ortala
+            
+            MDRaisedButton:
+                text: "Testi Bitir"
+                on_release: root.finish_test_early()
+                md_bg_color: get_color_from_hex('#F44336') # Kırmızı renk
+                size_hint_x: 1 # Kutu içinde tam genişlik kapla
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5} # Butonu kutu içinde ortala
