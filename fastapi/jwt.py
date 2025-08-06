@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Optional
 
-SECRET_KEY = "your_secret_key"  # Bunu .env dosyasına almanı öneririm
+SECRET_KEY = "your_secret_key"  
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 gün
 
@@ -20,3 +20,4 @@ def decode_access_token(token: str):
         return payload
     except JWTError:
         return None
+
