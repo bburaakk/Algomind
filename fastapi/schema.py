@@ -1,3 +1,5 @@
+#schema.py
+
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
@@ -124,3 +126,4 @@ class StoryRequest(BaseModel):
 
 class TestGenerateRequest(BaseModel):
     test_type: str  # "math" veya "synonymAntonym"
+
