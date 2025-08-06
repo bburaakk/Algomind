@@ -16,7 +16,7 @@ from typing import Optional, List, Dict, Any
 from kivy.uix.modalview import ModalView
 import requests
 import json
-from algomind.data.api_config import API_BASE_URL
+from algomind.data.apiConfig import API_BASE_URL
 
 
 

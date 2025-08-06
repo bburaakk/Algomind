@@ -1,9 +1,8 @@
 import requests
 import os
+from algomind.data.apiConfig import API_BASE_URL
 
-API_BASE_URL = "http://35.202.188.175:8080/"  # VM IP adresin
 TOKEN_FILE = "auth_token.txt"
-
 
 class AuthService:
     def do_signup(self, email, password, role, ad, soyad, username):

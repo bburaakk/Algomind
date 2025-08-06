@@ -11,6 +11,7 @@ from algomind.screens.examSelection import TestSecimEkrani
 from algomind.screens.studentAddSelection import OgrenciYonetimEkrani
 from algomind.screens.story_screen import StoryScreen
 from algomind.helpers import clear_text_inputs
+from algomind.data.apiConfig import API_BASE_URL
 
 class MainApp(MDApp):
     title = "Algomind"
@@ -61,7 +62,7 @@ class MainApp(MDApp):
         Bu fonksiyon signupScreen tarafından çağırılır.
         """
         # Sunucu adresinizin doğru olduğundan emin olun
-        url = "http://35.202.188.175:8080/signup"
+        url = f"{API_BASE_URL}/signup/"
         user_data = {
             "email": email,
             "password": password,

@@ -7,7 +7,7 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivymd.uix.screen import MDScreen
 from kivy.properties import ObjectProperty  # Ekledik: play_btn'i doğrudan erişmek için
-
+from algomind.data.apiConfig import API_BASE_URL
 
 class StoryScreen(MDScreen):
     # ids.play_btn'e doğrudan erişim için ObjectProperty ekledik
@@ -21,8 +21,8 @@ class StoryScreen(MDScreen):
         self.story_title = ""
         self.story_text = ""
 
-        self.story_api_url = "http://35.202.188.175:8080/story/"
-        self.tts_api_url = "http://35.202.188.175:8080/tts/"
+        self.story_api_url = f"{API_BASE_URL}/story/"
+        self.tts_api_url = f"{API_BASE_URL}/tts/"
 
     def on_kv_post(self, base_widget):
         # KV dosyasındaki widget'lar yüklendikten sonra play_btn referansını al

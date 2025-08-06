@@ -1,4 +1,3 @@
-# studentAddSelection.py
 import json
 from algomind.screens.baseScreen import BaseScreen
 from kivy.properties import ObjectProperty, StringProperty, ListProperty
@@ -7,7 +6,7 @@ from kivymd.app import MDApp
 from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
 from kivy.uix.behaviors import ButtonBehavior
-
+from algomind.data.apiConfig import API_BASE_URL
 
 class StudentCard(ButtonBehavior, BoxLayout):
     student_id = StringProperty('')
@@ -45,7 +44,7 @@ class OgrenciYonetimEkrani(BaseScreen):
             # Geçici çözüm: Tüm öğrencileri getir, sonra filtrele
             self.current_user_id = user_id
             self.req = UrlRequest(
-                "http://35.202.188.175:8080/students",
+                f"{API_BASE_URL}/students",
                 on_success=self._on_load_success,
                 on_failure=self._on_load_failure,
                 on_error=self._on_load_error,
@@ -120,7 +119,7 @@ class OgrenciYonetimEkrani(BaseScreen):
         try:
             req_body = json.dumps(data)
             self.req = UrlRequest(
-                "http://35.202.188.175:8080/students",
+                f"{API_BASE_URL}/students",
                 req_body=req_body,
                 req_headers={'Content-Type': 'application/json'},
                 on_success=self._add_student_success,

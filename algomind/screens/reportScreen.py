@@ -7,7 +7,7 @@ import requests
 import json
 import re
 from algomind.helpers import show_popup
-from algomind.data.api_config import API_BASE_URL  # Backend URL'ini config'den al
+from algomind.data.apiConfig import API_BASE_URL  # Backend URL'ini config'den al
 
 
 class RaporEkrani(MDScreen):
@@ -245,67 +245,6 @@ class RaporEkrani(MDScreen):
         except Exception as e:
             print(f"Yeni rapor oluşturulurken hata: {e}")
             raise
-
-    def _generate_local_report(self, report_data):
-        """Fallback: Lokal rapor oluşturur"""
-        success_rate = report_data.get('yuzde', 0.0)
-
-        if success_rate >= 80:
-            analysis = """[b]Başarı Analizi[/b]
-
-[b]Mükemmel Performans![/b]
-Öğrenci bu testte çok başarılı bir performans sergilemiştir. %{} başarı oranı, konuyu çok iyi anladığını göstermektedir.
-
-[b]Güçlü Yönler:[/b]
-• Soruları doğru analiz etme becerisi
-• Konuya hakim olma
-• Dikkatli çalışma
-
-[b]Öneriler:[/b]
-• Bu başarıyı sürdürmek için düzenli tekrar yapabilir
-• Daha ileri düzey sorularla kendini geliştirebilir
-• Diğer konularda da aynı dikkatle çalışabilir
-""".format(success_rate)
-        elif success_rate >= 60:
-            analysis = """[b]Başarı Analizi[/b]
-
-[b]İyi Performans[/b]
-Öğrenci bu testte ortalama üstü bir başarı göstermiştir. %{} başarı oranı, konuyu genel olarak anladığını göstermektedir.
-
-[b]Güçlü Yönler:[/b]
-• Temel kavramları anlama
-• Soruları çözme becerisi
-
-[b]Geliştirilmesi Gereken Alanlar:[/b]
-• Detaylı konu tekrarı
-• Daha fazla practice sorusu
-• Eksik olan konulara odaklanma
-
-[b]Öneriler:[/b]
-• Yanlış yapılan soruları tekrar gözden geçirebilir
-• Konuyu daha detaylı çalışabilir
-• Ek kaynak kullanarak bilgisini derinleştirebilir
-""".format(success_rate)
-        else:
-            analysis = """[b]Başarı Analizi[/b]
-
-[b]Gelişim Gereken Alan[/b]
-Öğrenci bu testte %{} başarı oranı elde etmiştir. Bu durum konunun daha detaylı çalışılması gerektiğini göstermektedir.
-
-[b]Geliştirilmesi Gereken Alanlar:[/b]
-• Temel kavramları pekiştirme
-• Konu tekrarı
-• Problem çözme stratejileri
-
-[b]Öneriler:[/b]
-• Konuyu baştan tekrar etmek faydalı olacaktır
-• Öğretmenden ek destek alabilir
-• Daha basit sorularla başlayıp zorluk seviyesini artırabilir
-• Düzenli çalışma programı oluşturabilir
-• Grup çalışması yaparak arkadaşlarından destek alabilir
-""".format(success_rate)
-
-        return analysis
 
     def _update_report_ui(self, report_data, analysis_text):
         """UI'yi güncellenmiş rapor ile günceller"""

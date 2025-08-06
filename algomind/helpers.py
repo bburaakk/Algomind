@@ -2,7 +2,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 import requests
-
+from algomind.data.apiConfig import API_BASE_URL
 
 def show_popup(title, message):
     """
@@ -35,7 +35,7 @@ def clear_text_inputs(screen, fields):
 
 
 def save_test_to_db(student_id, test_title):
-    api_url = 'http://35.202.188.175:8080/tests'
+    api_url = f"{API_BASE_URL}/tests/"
     data = {'student_id': student_id, 'test_title': test_title}
     print(f"DEBUG: Veritabanına test kaydediliyor. Veri: {data}")
     try:
